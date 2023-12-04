@@ -1,0 +1,338 @@
+﻿using CommunityToolkit.Diagnostics;
+using DoricoNet.Attributes;
+using DoricoNet.Exceptions;
+using DoricoNet.Requests;
+using DoricoNet.Responses;
+using Lea;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.Net.WebSockets;
+using System.Reflection;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace DoricoNet.Comms;
+
+/// <summary>
+/// Abstraction for communicating with Dorico
+/// </summary>
+public partial class DoricoCommsContext : IDoricoCommsContext
+{
+    private readonly IEventAggregator _eventAggregator;
+    private readonly ConcurrentQueue<RequestInfo> _responseQueue = new();
+    private readonly Dictionary<string, Type> _responseTypeMap;
+    private readonly ILogger _logger;
+    private readonly IClientWebSocketWrapper _webSocket;
+    private readonly JsonSerializerOptions _jsonSerializationOptions = new() { PropertyNameCaseInsensitive = true };
+
+    #region LoggerMessages
+
+    [LoggerMessage(LogLevel.Information, "Dorico.NET - Connection opened")]
+    partial void LogConnectionOpened();
+
+    [LoggerMessage(LogLevel.Information, "Dorico.NET - Connection closed: status description: {CloseStatusDescription}")]
+    partial void LogConnectionClosed(string? closeStatusDescription);
+
+    [LoggerMessage(LogLevel.Debug, "Dorico.NET - Message received: {Message}\n{Content}")]
+    partial void LogMessageReceived(string message, string content);
+
+    [LoggerMessage(LogLevel.Debug, "Dorico.NET - sent Request: {RequestType}\n{Content}")]
+    partial void LogMessageSent(Type requestType, string content);
+
+    [LoggerMessage(LogLevel.Error, "Dorico.NET - unknown response received:\n{Content}")]
+    partial void LogUnknownResponseError(string content);
+
+    [LoggerMessage(LogLevel.Information, "Dorico.NET - Request '{RequestType}' cancelled.")]
+    partial void LogRequestCancelled(string requestType);
+
+    [LoggerMessage(LogLevel.Information, "Dorico.NET - Request '{RequestType}' timed out.")]
+    partial void LogRequestTimedOut(string requestType);
+
+    #endregion
+
+    /// <inheritdoc/>
+    public WebSocketState State => _webSocket.State;
+
+    /// <inheritdoc/>
+    public Collection<string> HideMessageTypes { get; } = new Collection<string>();
+
+    /// <inheritdoc/>
+    public bool Echo { get; set; } = true;
+
+    /// <inheritdoc/>
+    public bool IsRunning { get; private set; }
+
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="doricoWebSocket">Dorico specific websocket object</param>
+    /// <param name="eventAggregator">Event aggregator instance</param>
+    public DoricoCommsContext(IClientWebSocketWrapper socket, IEventAggregator eventAggregator, ILogger logger)
+    {
+        _webSocket = socket;
+        _eventAggregator = eventAggregator;
+        _logger = logger;
+        _responseTypeMap = BuildResponseTypeMap();
+    }
+
+    /// <inheritdoc/>
+    public async Task ConnectAsync(IConnectionArguments connectionArgs)
+    {
+        Guard.IsNotNull(connectionArgs, nameof(connectionArgs));
+
+        if (State == WebSocketState.Open)
+        {
+            throw new DoricoConnectedException();
+        }
+
+        await _webSocket.ConnectAsync(new Uri(connectionArgs.Address),
+            connectionArgs.CancellationToken ?? CancellationToken.None).ConfigureAwait(false);
+        LogConnectionOpened();
+
+        Start();
+    }
+
+    /// <inheritdoc/>
+    public void Start()
+    {
+        if (State == WebSocketState.Open && !IsRunning)
+        {
+            IsRunning = true;
+
+            _ = Task.Factory.StartNew(async () =>
+            {
+                var responseBytes = new byte[1024];
+                var responseBuffer = new ArraySegment<byte>(responseBytes);
+
+                while (IsRunning)
+                {
+                    var responseInfo = await GetNextResponse(responseBuffer).ConfigureAwait(false);
+                    var isDisconnect = await IsDisconnected(responseInfo.Response).ConfigureAwait(false);
+
+                    if (!isDisconnect && responseInfo.Content.Length > 0)
+                    {
+                        HandleWebsocketResponse(responseInfo.Content);
+                    }
+                }
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        }
+    }
+
+    private async Task<bool> IsDisconnected(WebSocketReceiveResult response)
+    {
+        var result = false;
+
+        if (response.MessageType == WebSocketMessageType.Close)
+        {
+            LogConnectionClosed(response.CloseStatusDescription);
+            IsRunning = false;
+
+            // clear out request queue
+            while (_responseQueue.TryDequeue(out var item))
+            {
+                item.ResetEvent.Set();
+            }
+
+            // Close response has no body so can't be processed by HandleWebsocketResponse.
+            await _eventAggregator.PublishAsync(new DisconnectResponse(response)).ConfigureAwait(false);
+
+            result = true;
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc/>
+    public async Task Stop()
+    {
+        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Dorico WebSocket stopped").ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IDoricoResponse?> SendAsync(IDoricoRequest request, CancellationToken cancellationToken, int timeout = -1)
+    {
+        Guard.IsNotNull(request, nameof(request));
+
+        if (State != WebSocketState.Open)
+        {
+            ThrowHelper.ThrowInvalidOperationException($"WebSocket connection is not open: {State}.");
+        }
+
+        var sendBytes = Encoding.UTF8.GetBytes(request.Message);
+        var sendBuffer = new ArraySegment<byte>(sendBytes);
+        var resetEvent = new ManualResetEvent(false);
+        var requestInfo = new RequestInfo(request, resetEvent);
+
+        if (request is not DisconnectRequest)
+        {
+            // don't enqueue because we won't get a response for this.
+            _responseQueue.Enqueue(requestInfo);
+        }
+
+#pragma warning disable CA1031 // Do not catch general exception types
+        try
+        {
+            await _webSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
+
+            if (Echo && !HideMessageTypes.Contains(request.MessageId))
+            {
+                LogMessageSent(request.GetType(), request.Message);
+            }
+
+            if (request is DisconnectRequest)
+            {
+                // don't wait around for Dorico, because it doesn't seem to respond to disconnect.
+                resetEvent.Set();
+            }
+
+            var waitResult = WaitHandle.WaitAny(new[] { resetEvent, cancellationToken.WaitHandle }, timeout);
+
+            switch (waitResult)
+            {
+                case WaitHandle.WaitTimeout:
+                    requestInfo.IsTimedOut = true;
+                    ((DoricoRequestBase)request).Abort();
+                    LogRequestTimedOut(requestInfo.GetType().Name);
+                    break;
+                case 1:
+                    requestInfo.IsCancelled = true;
+                    ((DoricoRequestBase)request).Abort();
+                    LogRequestCancelled(requestInfo.GetType().Name);
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            requestInfo.IsCancelled = true;
+            ((DoricoRequestBase)request).Abort();
+            LogRequestCancelled(requestInfo.GetType().Name);
+        }
+        catch
+        {
+            ((DoricoRequestBase)request).Abort();
+        }
+        finally
+        {
+            resetEvent.Dispose();
+        }
+#pragma warning restore CA1031 // Do not catch general exception types
+
+        return request.Response ?? request.ErrorResponse;
+    }
+
+    private void ResponseHandler(IEvent evt)
+    {
+        var response = (DoricoResponseBase)evt;
+
+        _responseQueue.TryPeek(out var requestInfo);
+
+        if (requestInfo != null)
+        {
+            if (requestInfo.IsAborted)
+            {
+                _responseQueue.TryDequeue(out _);
+                ResponseHandler(evt);
+                return;
+            }
+            else if (response is Response errorResponse && errorResponse.Code == "kError")
+            {
+                _responseQueue.TryDequeue(out _);
+                ((DoricoRequestBase)requestInfo.Request).SetErrorResponse(errorResponse);
+                requestInfo.ResetEvent.Set();
+            }
+            else if (requestInfo.Request.ResponseType == response.GetType())
+            {
+                _responseQueue.TryDequeue(out _);
+                ((DoricoRequestBase)requestInfo.Request).SetResponse(response);
+                requestInfo.ResetEvent.Set();
+            }
+        }
+
+        if (response is DoricoUnpromptedResponseBase)
+        {
+            _eventAggregator.Publish(evt);
+        }
+    }
+
+    private async Task<(WebSocketReceiveResult Response, string Content)> GetNextResponse(ArraySegment<byte> responseBuffer)
+    {
+        WebSocketReceiveResult response;
+        StringBuilder sb = new();
+
+        do
+        {
+            response = await _webSocket.ReceiveAsync(responseBuffer, CancellationToken.None).ConfigureAwait(false);
+
+            if (response.Count == 0)
+            {
+                continue;
+            }
+
+            var messageBytes = responseBuffer.Skip(responseBuffer.Offset).Take(response.Count).ToArray();
+            sb.Append(Encoding.UTF8.GetString(messageBytes));
+        }
+        while (!response.EndOfMessage);
+
+        return (response, sb.ToString());
+    }
+
+    private void HandleWebsocketResponse(string content)
+    {
+        var jObj = JsonNode.Parse(content);
+        var message = jObj!["message"]?.ToString();
+
+        if (message == null || !_responseTypeMap.TryGetValue(message, out var responseType))
+        {
+            LogUnknownResponseError(content);
+            return;
+        }
+
+        var responseObj = (DoricoResponseBase?)JsonSerializer.Deserialize(
+            content,
+            responseType,
+            _jsonSerializationOptions);
+
+        if (responseObj != null)
+        {
+            responseObj.RawJson = content;
+
+            if (Echo && !HideMessageTypes.Contains(message!))
+            {
+                LogMessageReceived(message, content);
+            }
+
+            ResponseHandler(responseObj);
+        }
+    }
+
+    private static Dictionary<string, Type> BuildResponseTypeMap()
+    {
+        var map = new Dictionary<string, Type>();
+        var responseTypes = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(DoricoResponseBase).IsAssignableFrom(x));
+
+        foreach (var type in responseTypes)
+        {
+            string messageId = ((ResponseMessageAttribute)type.GetCustomAttributes(typeof(ResponseMessageAttribute), true).Single()).MessageId;
+
+            if (messageId != null)
+            {
+                map[messageId] = type;
+            }
+        }
+
+        return map;
+    }
+
+    private record RequestInfo(IDoricoRequest Request, ManualResetEvent ResetEvent)
+    {
+        public bool IsCancelled { get; set; }
+
+        public bool IsTimedOut { get; set; }
+
+        public bool IsAborted => IsCancelled || IsTimedOut;
+    }
+}

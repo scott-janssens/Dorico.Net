@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dorico.Net", "Dorico.Net\Dorico.Net.csproj", "{59E7868A-6272-4804-8BDD-C34DDE1E123B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DoricoNetExample", "DoricoNetExample\DoricoNetExample.csproj", "{D16B2258-B564-4695-B0D7-71D597E67232}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A3C79B61-FD9B-4661-80E9-58E99B8C3F61}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dorico.Net.Tests.Unit", "Dorico.Net.Tests\Dorico.Net.Tests.Unit\Dorico.Net.Tests.Unit.csproj", "{46E187AB-5A80-48AA-B04E-6895DB30C8A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dorico.Net.Tests.Integration", "Dorico.Net.Tests\Dorico.Net.Tests.Integration\Dorico.Net.Tests.Integration.csproj", "{14E01A5A-FE7B-4D9C-9374-052CA7254D48}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{59E7868A-6272-4804-8BDD-C34DDE1E123B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59E7868A-6272-4804-8BDD-C34DDE1E123B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59E7868A-6272-4804-8BDD-C34DDE1E123B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59E7868A-6272-4804-8BDD-C34DDE1E123B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D16B2258-B564-4695-B0D7-71D597E67232}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D16B2258-B564-4695-B0D7-71D597E67232}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D16B2258-B564-4695-B0D7-71D597E67232}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D16B2258-B564-4695-B0D7-71D597E67232}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46E187AB-5A80-48AA-B04E-6895DB30C8A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46E187AB-5A80-48AA-B04E-6895DB30C8A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46E187AB-5A80-48AA-B04E-6895DB30C8A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46E187AB-5A80-48AA-B04E-6895DB30C8A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14E01A5A-FE7B-4D9C-9374-052CA7254D48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14E01A5A-FE7B-4D9C-9374-052CA7254D48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14E01A5A-FE7B-4D9C-9374-052CA7254D48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14E01A5A-FE7B-4D9C-9374-052CA7254D48}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{46E187AB-5A80-48AA-B04E-6895DB30C8A4} = {A3C79B61-FD9B-4661-80E9-58E99B8C3F61}
+		{14E01A5A-FE7B-4D9C-9374-052CA7254D48} = {A3C79B61-FD9B-4661-80E9-58E99B8C3F61}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {211F54EF-1C2B-4846-B264-A69580486CD1}
+	EndGlobalSection
+EndGlobal
