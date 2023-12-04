@@ -15,7 +15,7 @@
     <RepositoryUrl>https://github.com/scott-janssens/Dorico.Net</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>Dorico remote</PackageTags>
+    <PackageTags>Steinberg Dorico remote control API music notation</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -24,6 +24,7 @@
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <Version>0.1.0-beta</Version>
+    <PackageReleaseNotes>Initial beta version</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
