@@ -30,8 +30,8 @@ public partial class DoricoRemote : IDoricoRemote
     [LoggerMessage(LogLevel.Information, "Dorico.NET - Connected to Dorico.")]
     static partial void LogConnection(ILogger logger);
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Disconnected from Dorico. CloseStatus: {CloseStatus},\n\tCloseStatusDescription: {CloseStatusDescription}")]
-    static partial void LogDisconnect(ILogger logger, WebSocketCloseStatus? closeStatus, string? closeStatusDescription);
+    [LoggerMessage(LogLevel.Information, "Dorico.NET - Disconnected from Dorico")]
+    static partial void LogDisconnect(ILogger logger);
 
     [LoggerMessage(LogLevel.Error, "Dorico.NET - Could not connect to Dorico. Make sure Dorico is running.")]
     static partial void LogConnectionError(ILogger logger);
@@ -90,9 +90,13 @@ public partial class DoricoRemote : IDoricoRemote
                     }
                 }
             }
-            catch
+            catch (DoricoException)
             {
-                throw new DoricoException("Could not connect to Dorico. Make sure Dorico is running.");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DoricoException("Could not connect to Dorico. Make sure Dorico is running.", ex);
             }
         }
 
@@ -108,14 +112,11 @@ public partial class DoricoRemote : IDoricoRemote
     {
         AssertConnected();
 
-        var request = new DisconnectRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
-
-        ErrorCheck(request, response);
+        await _commsContext.StopAsync(cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
 
         if (!IsConnected)
         {
-            LogDisconnect(_logger, request.TypedResponse?.CloseStatus, request.TypedResponse?.CloseStatusDescription);
+            LogDisconnect(_logger);
         }
 
         return !IsConnected;

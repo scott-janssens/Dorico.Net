@@ -68,32 +68,31 @@ public class DoricoCommsContextTests
     [Test]
     public async Task TestStop()
     {
-        var close = false;
-        WebSocketReceiveResult GetResponse() => close
-                ? new WebSocketReceiveResult(0, WebSocketMessageType.Text, true)
-                : new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Dorico WebSocket stopped");
-
         _mockWebSocket.Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(GetResponse());
+            .ReturnsAsync(() =>
+            {
+                Task.Delay(100).Wait();
+                return new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed");
+            });
 
         _context.Start();
         Assert.That(_context.IsRunning, Is.True);
 
-        var stopTask = _context.Stop();
-        close = true;
-        await stopTask;
-
-        while (_context.IsRunning)
-        {
-            await Task.Delay(100);
-        }
+        await _context.StopAsync(CancellationToken.None, -1);
 
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == "Dorico WebSocket stopped")),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.Contains("Connection closed: status description"))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
+    }
+
+    [Test]
+    public void TestStopNotRunning()
+    {
+        _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Closed);
+        Assert.ThrowsAsync<InvalidOperationException>(async () => await _context.StopAsync(CancellationToken.None, -1));
     }
 
     [Test]

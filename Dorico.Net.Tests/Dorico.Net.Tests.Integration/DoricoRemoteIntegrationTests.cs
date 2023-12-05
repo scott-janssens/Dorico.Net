@@ -27,7 +27,7 @@ public class DoricoRemoteIntegrationTests
     public DoricoRemoteIntegrationTests()
     {
         var services = new ServiceCollection()
-            .AddSingleton(sp => LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("DoricoRemote"))
+            .AddSingleton(sp => LoggerFactory.Create(builder => builder.AddDebug().SetMinimumLevel(LogLevel.Trace)).CreateLogger("Dorico.Net"))
             .AddSingleton<IEventAggregator, EventAggregator>()
             .AddTransient<IClientWebSocketWrapper, ClientWebSocketWrapper>()
             .AddSingleton<IDoricoCommsContext, DoricoCommsContext>()

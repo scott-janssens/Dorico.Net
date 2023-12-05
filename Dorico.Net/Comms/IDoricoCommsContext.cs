@@ -57,6 +57,7 @@ namespace DoricoNet.Comms
         /// </summary>
         /// <returns></returns>
         [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Name is not confusing")]
-        Task Stop();
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Parameter order is consistent")]
+        Task StopAsync(CancellationToken cancellationToken, int timeout = -1);
     }
 }
