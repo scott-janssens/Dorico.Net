@@ -11,6 +11,10 @@ public class DoricoException : Exception
     public DoricoException(string message) : base(message)
     {
     }
+
+    public DoricoException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
 }
 
 /// <summary>

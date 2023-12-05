@@ -87,6 +87,8 @@ public partial class DoricoCommsContext : IDoricoCommsContext
             throw new DoricoConnectedException();
         }
 
+        _responseQueue.Clear();
+
         await _webSocket.ConnectAsync(new Uri(connectionArgs.Address),
             connectionArgs.CancellationToken ?? CancellationToken.None).ConfigureAwait(false);
         LogConnectionOpened();
@@ -109,9 +111,9 @@ public partial class DoricoCommsContext : IDoricoCommsContext
                 while (IsRunning)
                 {
                     var responseInfo = await GetNextResponse(responseBuffer).ConfigureAwait(false);
-                    var isDisconnect = await IsDisconnected(responseInfo.Response).ConfigureAwait(false);
+                    var isDisconnected = await IsDisconnected(responseInfo.Response).ConfigureAwait(false);
 
-                    if (!isDisconnect && responseInfo.Content.Length > 0)
+                    if (!isDisconnected && responseInfo.Content.Length > 0)
                     {
                         HandleWebsocketResponse(responseInfo.Content);
                     }
@@ -132,7 +134,10 @@ public partial class DoricoCommsContext : IDoricoCommsContext
             // clear out request queue
             while (_responseQueue.TryDequeue(out var item))
             {
-                item.ResetEvent.Set();
+                if (!item.IsAborted)
+                {
+                    item.ResetEvent.Set();
+                }
             }
 
             // Close response has no body so can't be processed by HandleWebsocketResponse.
@@ -145,9 +150,20 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     }
 
     /// <inheritdoc/>
-    public async Task Stop()
+    public async Task StopAsync(CancellationToken cancellationToken, int timeout = -1)
     {
-        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Dorico WebSocket stopped").ConfigureAwait(false);
+        if (State != WebSocketState.Open)
+        {
+            ThrowHelper.ThrowInvalidOperationException($"WebSocket connection is not open: {State}.");
+        }
+
+        var request = new DisconnectRequest();
+        await SendAsync(request, cancellationToken, timeout).ConfigureAwait(false);
+
+        if (request.IsAborted)
+        {
+            throw new DoricoException("Request was cancelled or timed out.");
+        }
     }
 
     /// <inheritdoc/>
@@ -165,11 +181,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
         var resetEvent = new ManualResetEvent(false);
         var requestInfo = new RequestInfo(request, resetEvent);
 
-        if (request is not DisconnectRequest)
-        {
-            // don't enqueue because we won't get a response for this.
-            _responseQueue.Enqueue(requestInfo);
-        }
+        _responseQueue.Enqueue(requestInfo);
 
 #pragma warning disable CA1031 // Do not catch general exception types
         try
@@ -179,12 +191,6 @@ public partial class DoricoCommsContext : IDoricoCommsContext
             if (Echo && !HideMessageTypes.Contains(request.MessageId))
             {
                 LogMessageSent(request.GetType(), request.Message);
-            }
-
-            if (request is DisconnectRequest)
-            {
-                // don't wait around for Dorico, because it doesn't seem to respond to disconnect.
-                resetEvent.Set();
             }
 
             var waitResult = WaitHandle.WaitAny(new[] { resetEvent, cancellationToken.WaitHandle }, timeout);
