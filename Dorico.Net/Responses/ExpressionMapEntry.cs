@@ -7,5 +7,6 @@
 /// <param name="PlaybackTechniqueIds">The playback technique combination</param>
 public record ExpressionMapEntry(string Type, IEnumerable<string> PlaybackTechniqueIds)
 {
+    /// <inheritdoc/>
     public override string ToString() => Type;
 }

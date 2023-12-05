@@ -63,17 +63,17 @@ if (commands != null)
     node.Values.ForEach(x => Console.WriteLine($"  \"{x.DisplayName}\", {x.Name}"));
 }
 
+// The CommandCollection contains CommandInfo records which describe the commands. Each contains lists of required and
+// optional parameters. These can be used to initialize Command request objects which are sent to Dorico to perform
+// an operation. Parameters can be passed into the constructor or added with the AddParameter() method.
+
 // commands can be sent to Dorico in 2 ways
-// with the raw command/parameter valies:
+// with the raw command/parameter values:
 var fileOpenResponse = await remote.SendRequestAsync(new Command("File.Open", new CommandParameter("File", "<path>")));
 
 // or with a command object from the commands list:
-var commandInfo = commands!["File.Open"];
 
-// The CommandCollection contains CommandInfo records which describe the command. They contain lists of the required and
-// optional parameters for that command. These can be used to initialize Command objects. Parameters can be passed into
-// the constructor or added with the AddParameter() method.
-
+//var commandInfo = commands!["File.Open"];
 //var fileOpenCommand = new Command(commandInfo);
 //fileOpenCommand.AddParameter(new("File", "<path>"));
 //fileOpenResponse = await remote.SendRequestAsync(fileOpenCommand);
@@ -87,9 +87,9 @@ var commandInfo = commands!["File.Open"];
 // NOTE: Dorico.Net caches the CommandInfo objects after retrieving them, so subsequent calls to GetCommandsAsync() will
 // not call Dorico.
 
-// NOTE: sometimes Dorico will return a "kOK" to acknowledge receipt of the request. That does not necessarily
-// mean the operation was successful.  For example, sending a bad path in the the above File.Open command
-// will receive a "kOK", but the operation will fail in Dorico.
+// NOTE: Dorico returns a "kOK" to acknowledge receipt of the request. That does not necessarily mean the operation was
+// successful.  For example, sending a bad path in the the above File.Open command will receive a "kOK", but the operation
+// will fail in Dorico.
 
 // NOTE: Some commands, such as those to create projects appear to be disabled through the Remote Control API at the moment.
 
@@ -130,9 +130,9 @@ OptionCollection? layoutOptions = null;
 if (layoutsResponse != null)
 {
     var layoutId = layoutsResponse.Layouts.First().LayoutID;
-    
+
     layoutOptions = await remote.GetLayoutOptionsAsync(layoutId);
-    Console.WriteLine($"Notation Options: {layoutOptions?.Count}\n");
+    Console.WriteLine($"Layout Options: {layoutOptions?.Count}\n");
 
     // Modify a layout option of a specific layout. Multiple options can be set at
     // once on multiple layouts, but we'll just do one of each here.
@@ -197,6 +197,6 @@ async Task InsertNoteAsync(Note note)
     {
         await remote!.SendRequestAsync(command);
     }
- 
+
     await remote!.SendRequestAsync(new Command("NoteInput.Exit"));
 }

@@ -14,3 +14,8 @@ Leave feedback or open a branch if there's a common functionality you think shou
 # Notes
 
 The Note class does not currently support microtonality.
+
+
+# Disclaimer
+
+The Dorico trademark is registered in the US, Europe and other countries by Steinberg Media Technologies GmbH and is used with permission

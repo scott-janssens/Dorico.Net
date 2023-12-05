@@ -3,7 +3,7 @@
 namespace DoricoNet.Commands;
 
 /// <summary>
-/// Represent values associate with a note/pitch.
+/// Represent values associate with a note/pitch. Microtonality is not currently supported.
 /// </summary>
 public record Note
 {
@@ -103,7 +103,7 @@ public record Note
         Accidental = pitch[1..]?.ToLowerInvariant() ?? string.Empty;
         Octave = octave;
         _internalUseSharps = Accidental != "b" && UseSharps;
-   
+
         Midi = octave * 12 + 12 + (_internalUseSharps ? Array.FindIndex(_pitchesSharp, PitchMatch) : Array.FindIndex(_pitchesFlat, PitchMatch));
 
         _accidentalType = GetAccidentalType(Accidental);

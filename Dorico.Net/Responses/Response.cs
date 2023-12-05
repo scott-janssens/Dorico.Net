@@ -11,5 +11,6 @@ namespace DoricoNet.Responses;
 [ResponseMessage("response")]
 public record Response(string Code, string? Detail) : DoricoResponseBase
 {
+    /// <inheritdoc/>
     public override string ToString() => $"Response: {Code} {Detail}";
 }

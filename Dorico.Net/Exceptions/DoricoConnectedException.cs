@@ -6,6 +6,9 @@
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "Not needed")]
 public class DoricoConnectedException : Exception
 {
+    /// <summary>
+    /// DoricoConnectedException constructor.
+    /// </summary>
     public DoricoConnectedException() : base("DoricoRemote is already connected to Dorico.")
     {
     }

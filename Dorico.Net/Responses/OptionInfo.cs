@@ -11,5 +11,6 @@ namespace DoricoNet.Responses;
 /// <param name="EnumValues">Values for enums</param>
 public sealed record OptionInfo(string Path, string ValueType, string CurrentValue, IEnumerable<string>? EnumValues) : IOrganizable
 {
+    /// <inheritdoc/>
     Func<string> IOrganizable.GetNameValue => () => Path;
 }

@@ -38,7 +38,7 @@ public class OrganizedTreeListNodeTests
             new("item2")
         };
 
-        var node = new OrganizedTreeListNode<TestOrganizable>(items, x => x.GetNameValue());
+        var node = new OrganizedTreeListNode<TestOrganizable>(items);
 
         Assert.Multiple(() =>
         {
@@ -57,7 +57,7 @@ public class OrganizedTreeListNodeTests
             new(null!)
         };
 
-        Assert.Throws<InvalidOperationException>(() => new OrganizedTreeListNode<TestOrganizable>(items, x => x.GetNameValue()));
+        Assert.Throws<InvalidOperationException>(() => new OrganizedTreeListNode<TestOrganizable>(items));
     }
 
     [Test]
@@ -70,7 +70,7 @@ public class OrganizedTreeListNodeTests
             new("parent2.item1")
         };
 
-        var node = new OrganizedTreeListNode<TestOrganizable>(items, x => x.GetNameValue());
+        var node = new OrganizedTreeListNode<TestOrganizable>(items);
 
         var root = node.FindParentNode("parent1", node);
 

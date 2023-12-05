@@ -9,8 +9,8 @@ namespace DoricoNet.Responses;
 /// <param name="DisplayName">A human readable name for the command</param>
 /// <param name="RequiredParameters">Parameters required by the command</param>
 /// <param name="OptionalParameters">Optional parameters for the command</param>
-public sealed record CommandInfo(string Name, string? DisplayName = null, IEnumerable<string>? RequiredParameters = null, IEnumerable<string>? OptionalParameters = null) :  IOrganizable
-{    
+public sealed record CommandInfo(string Name, string? DisplayName = null, IEnumerable<string>? RequiredParameters = null, IEnumerable<string>? OptionalParameters = null) : IOrganizable
+{
     /// <summary>
     /// Parameters required by the command.
     /// </summary>

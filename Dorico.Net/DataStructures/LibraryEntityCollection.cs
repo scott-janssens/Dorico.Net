@@ -19,8 +19,18 @@ public class LibraryEntityCollection : ICollection<LibraryEntity>
     /// <inheritdoc/>
     public bool IsReadOnly => false;
 
+    /// <summary>
+    /// Returns a library entity with the specified EntityId.
+    /// </summary>
+    /// <param name="entityId">The EntityId of an entity.</param>
+    /// <returns>A LibraryEntity object.</returns>
     public LibraryEntity GetByEntityId(string entityId) => _byId[entityId];
 
+    /// <summary>
+    /// Returns a library entity with the specified EntityId.
+    /// </summary>
+    /// <param name="name">The name of an entity.</param>
+    /// <returns>A LibraryEntity object.</returns>
     public IImmutableList<LibraryEntity> GetByName(string name) => _byName[name].ToImmutableList();
 
     /// <inheritdoc/>

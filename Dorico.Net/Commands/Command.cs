@@ -6,7 +6,7 @@ using System.Collections.Immutable;
 namespace DoricoNet.Commands;
 
 /// <summary>
-/// Instructs Dorico to execute a command
+/// Request object that instructs Dorico to execute a command
 /// </summary>
 public record Command : DoricoRequestBase<Response>
 {
@@ -27,7 +27,12 @@ public record Command : DoricoRequestBase<Response>
 
     public override string MessageId => "command";
 
-    public Command(CommandInfo commandInfo, params CommandParameter [] parameters)
+    /// <summary>
+    /// Command record constructor
+    /// </summary>
+    /// <param name="commandInfo">A CommandInfo record describing the command.</param>
+    /// <param name="parameters">A collection of CommandParameter objects.</param>
+    public Command(CommandInfo commandInfo, params CommandParameter[] parameters)
     {
         Guard.IsNotNull(commandInfo, nameof(commandInfo));
 
@@ -44,6 +49,11 @@ public record Command : DoricoRequestBase<Response>
         }
     }
 
+    /// <summary>
+    /// Command record constructor
+    /// </summary>
+    /// <param name="name">The name of a Dorico command.</param>
+    /// <param name="parameters">A collection of CommandParameter objects.</param>
     public Command(string name, params CommandParameter[] parameters)
     {
         Name = name;
@@ -83,7 +93,7 @@ public record Command : DoricoRequestBase<Response>
     }
 
     /// <summary>
-    /// Returns the CommandInfo object about this command.
+    /// Returns the CommandInfo object, if any, used to create this Command object, otherwise null.
     /// </summary>
     /// <returns>A CommandInfo object</returns>
     public CommandInfo? ToCommandInfo() => _commandInfo;
@@ -95,6 +105,10 @@ public record Command : DoricoRequestBase<Response>
         return $"{{\"message\": \"command\",\"command\": \"{Name}?{parameters}\"}}";
     }
 
+    /// <summary>
+    /// Returns the CommandInfo object, if any, used to create this Command object, otherwise null.
+    /// </summary>
+    /// <returns>A CommandInfo object</returns>
     public static implicit operator CommandInfo?(Command command)
     {
         return command?._commandInfo;

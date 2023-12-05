@@ -7,7 +7,9 @@ namespace DoricoNet.Requests;
 /// </summary>
 public record GetPropertiesRequest : DoricoRequestBase<PropertiesListResponse>
 {
+    /// <inheritdoc/>
     public override string Message => "{\"message\": \"getproperties\"}";
 
+    /// <inheritdoc/>
     public override string MessageId => "getproperties";
 }
