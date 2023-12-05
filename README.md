@@ -9,6 +9,8 @@ The Dorico API is currently not well documented.  It doesn't provide much functi
 
 See Example app for usage.
 
+This code has been tested with Dorico Pro 5 on Windows 11.
+
 Leave feedback or open a branch if there's a common functionality you think should be added.
 
 # Notes
