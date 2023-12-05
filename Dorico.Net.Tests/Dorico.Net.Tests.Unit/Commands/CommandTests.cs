@@ -173,7 +173,7 @@ public class CommandTests
     {
         CommandInfo commandInfo = _command!;
         var commandInfoNull = (CommandInfo?)(Command)null!;
-      
+
         Assert.Multiple(() =>
         {
             Assert.That(commandInfo, Is.EqualTo(_commandInfo));

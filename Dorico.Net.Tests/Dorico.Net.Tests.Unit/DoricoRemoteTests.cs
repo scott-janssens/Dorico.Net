@@ -71,7 +71,7 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Dorico.NET - Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -95,13 +95,13 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Error),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == "Dorico.NET - Could not connect to Dorico. Make sure Dorico is running.")),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == "Could not connect to Dorico. Make sure Dorico is running.")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Dorico.NET - Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
     }
@@ -123,7 +123,7 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Dorico.NET - Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
     }
@@ -155,7 +155,7 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Dorico.NET - Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }

@@ -12,5 +12,6 @@
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Name is valid")]
 public record Property(string Name, string? DisplayName, string ValueType, string? CurrentValue, IEnumerable<string>? EnumValues, bool? SetGlobally)
 {
+    /// <inheritdoc/>
     public override string ToString() => string.IsNullOrWhiteSpace(DisplayName) ? "<Property>" : DisplayName;
 }

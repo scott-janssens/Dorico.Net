@@ -16,6 +16,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     private readonly ILogger _logger;
     private ClientWebSocket? _clientWebSocket;
 
+    /// <inheritdoc/>
     public WebSocketState State => _clientWebSocket?.State ?? WebSocketState.None;
 
     #region LoggerMessages
@@ -49,11 +50,16 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
 
     #endregion
 
+    /// <summary>
+    /// ClientWebSocketWrapper constructor.
+    /// </summary>
+    /// <param name="logger">A logger object.</param>
     public ClientWebSocketWrapper(ILogger logger)
     {
         _logger = logger;
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         Dispose(true);
@@ -73,6 +79,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
         }
     }
 
+    /// <inheritdoc/>
     public Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
     {
         Guard.IsNotNull(uri);
@@ -83,7 +90,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
         }
 
         LogConnecting(uri.ToString());
-        
+
         _clientWebSocket = new();
         var result = _clientWebSocket.ConnectAsync(uri, cancellationToken);
 
@@ -93,12 +100,13 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
             LogNotRunning(result.Status.ToString());
             throw new DoricoException($"Unexpected WebSocket status after connection: {result.Status}");
         }
-        
+
         LogConnected(uri.ToString());
-        
+
         return result;
     }
 
+    /// <inheritdoc/>
     public async Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription)
     {
         if (State != WebSocketState.Open)
@@ -117,6 +125,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
         _clientWebSocket = null;
     }
 
+    /// <inheritdoc/>
     public async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
     {
         if (State != WebSocketState.Open)
@@ -134,8 +143,9 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
             throw;
         }
         LogSent(messageType, endOfMessage);
-    }    
+    }
 
+    /// <inheritdoc/>
     public async Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken cancellationToken)
     {
         if (State != WebSocketState.Open)

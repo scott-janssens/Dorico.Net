@@ -79,7 +79,7 @@ public class LibraryEntitiesCollectionTests
         _collection.Add(_entity);
 
         var enumerator = _collection.GetEnumerator();
-      
+
         Assert.Multiple(() =>
         {
             Assert.That(enumerator.MoveNext(), Is.True);
@@ -94,7 +94,7 @@ public class LibraryEntitiesCollectionTests
         _collection.Add(_entity);
 
         var enumerator = ((System.Collections.IEnumerable)_collection).GetEnumerator();
-        
+
         Assert.Multiple(() =>
         {
             Assert.That(enumerator.MoveNext(), Is.True);

@@ -10,5 +10,6 @@
 /// <param name="PlaybackTechniqueIds">The playback technique combination</param>
 public record DrumKitNoteMapEntry(string? Name, string InstrumentId, int Pitch, IEnumerable<int>? KeySwitches, IEnumerable<string>? PlaybackTechniqueIds)
 {
-    public override string ToString() => string.IsNullOrWhiteSpace(Name) ? "<DrumKitNoteMapEntry>": Name;
+    /// <inheritdoc/>
+    public override string ToString() => string.IsNullOrWhiteSpace(Name) ? "<DrumKitNoteMapEntry>" : Name;
 }

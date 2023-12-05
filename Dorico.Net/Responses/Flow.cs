@@ -7,5 +7,6 @@
 /// <param name="FlowName"><The name of this flow/param>
 public record Flow(int FlowID, string FlowName)
 {
+    /// <inheritdoc/>
     public override string ToString() => FlowName;
 }

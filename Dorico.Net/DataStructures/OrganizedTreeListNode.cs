@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
 using System.Collections.Immutable;
-using System.Linq.Expressions;
 
 namespace DoricoNet.DataStructures;
 
@@ -18,20 +17,36 @@ public class OrganizedTreeListNode<T>
     /// </summary>
     public ImmutableList<T> Values => _values.ToImmutableList();
 
+    /// <summary>
+    /// The path from the root node to this node.
+    /// </summary>
     public string Path { get; init; }
 
+    /// <summary>
+    /// A collection of child OrganizedTreeListNodes.
+    /// </summary>
     public IList<OrganizedTreeListNode<T>> ChildNodes { get; } = new List<OrganizedTreeListNode<T>>();
 
+    /// <summary>
+    /// OrganizedTreeListNode constructor.
+    /// </summary>
+    /// <param name="path">The path of this node from the root node.</param>
     public OrganizedTreeListNode(string path)
     {
         Path = path;
     }
 
-    public OrganizedTreeListNode(IEnumerable<T> enumerable, Expression<Func<T, string>> lambda, string path = ".")
+    /// <summary>
+    /// OrganizedTreeListNode constructor. The collection passed in organized in a tree structure
+    /// with this node becomming the root node.
+    /// </summary>
+    /// <param name="enumerable">A collcation of objects to be organized.</param>
+    /// <param name="path"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public OrganizedTreeListNode(IEnumerable<T> enumerable, string path = ".")
         : this(path)
     {
         Guard.IsNotNull(enumerable, nameof(enumerable));
-        Guard.IsNotNull(lambda, nameof(lambda));
 
         foreach (var item in enumerable)
         {
@@ -45,6 +60,12 @@ public class OrganizedTreeListNode<T>
         }
     }
 
+    /// <summary>
+    /// Returns the parent node of the node with the specified name.
+    /// </summary>
+    /// <param name="name">The name of a node to search for.</param>
+    /// <param name="root">The root node of the organized tree.</param>
+    /// <returns></returns>
     public OrganizedTreeListNode<T> FindParentNode(string name, OrganizedTreeListNode<T> root)
     {
         Guard.IsNotNull(name);
@@ -78,5 +99,6 @@ public class OrganizedTreeListNode<T>
         return node ?? root;
     }
 
+    /// <inheritdoc/>
     public override string ToString() => Path;
 }

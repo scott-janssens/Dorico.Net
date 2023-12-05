@@ -27,28 +27,38 @@ public partial class DoricoRemote : IDoricoRemote
 
     #region LoggerMessages
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Connected to Dorico.")]
+    [LoggerMessage(LogLevel.Information, "Connected to Dorico.")]
     static partial void LogConnection(ILogger logger);
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Disconnected from Dorico")]
+    [LoggerMessage(LogLevel.Information, "Disconnected from Dorico")]
     static partial void LogDisconnect(ILogger logger);
 
-    [LoggerMessage(LogLevel.Error, "Dorico.NET - Could not connect to Dorico. Make sure Dorico is running.")]
+    [LoggerMessage(LogLevel.Error, "Could not connect to Dorico. Make sure Dorico is running.")]
     static partial void LogConnectionError(ILogger logger);
 
-    [LoggerMessage(LogLevel.Trace, "Dorico.NET - Status:\n{Status}")]
+    [LoggerMessage(LogLevel.Trace, "Status:\n{Status}")]
     static partial void LogStatus(ILogger logger, string status);
 
     #endregion
 
+    /// <inheritdoc/>
     public string? ClientName { get; protected set; }
 
+    /// <inheritdoc/>
     public bool IsConnected => _commsContext.State == WebSocketState.Open;
 
+    /// <inheritdoc/>
     public string? SessionToken { get; protected set; }
 
+    /// <inheritdoc/>
     public int Timeout { get; set; } = 30000;
 
+    /// <summary>
+    /// DoricoRemote constructor.
+    /// </summary>
+    /// <param name="commsContext">A DoricoCommsContext object.</param>
+    /// <param name="eventAggregator">An EventAggregator object.</param>
+    /// <param name="logger">A logger object</param>
     public DoricoRemote(IDoricoCommsContext commsContext, IEventAggregator eventAggregator, ILogger logger)
     {
         _commsContext = commsContext;
@@ -56,6 +66,7 @@ public partial class DoricoRemote : IDoricoRemote
         _logger = logger;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<bool> ConnectAsync(string clientName, IConnectionArguments connectionArguments)
     {
         Guard.IsNotNull(clientName);
@@ -108,6 +119,7 @@ public partial class DoricoRemote : IDoricoRemote
         return IsConnected;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<bool> DisconnectAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -122,6 +134,7 @@ public partial class DoricoRemote : IDoricoRemote
         return !IsConnected;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<VersionResponse?> GetAppInfoAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -134,6 +147,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (VersionResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<CommandCollection> GetCommandsAsync(CancellationToken? cancellationToken = null)
     {
         if (_commands == null || !_commands.Any())
@@ -151,6 +165,7 @@ public partial class DoricoRemote : IDoricoRemote
         return _commands!;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<CommandInfo> GetCommandAsync(string name, CancellationToken? cancellationToken = null)
     {
         // AssertConnected(); called in GetCommandsAsync()
@@ -161,6 +176,7 @@ public partial class DoricoRemote : IDoricoRemote
         return command ?? throw new InvalidOperationException($"No command with name '{name}' found.");
     }
 
+    /// <inheritdoc/>
     public async Task<OptionCollection?> GetEngravingOptionsAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -173,6 +189,7 @@ public partial class DoricoRemote : IDoricoRemote
         return ((OptionsListResponse?)response)?.Options;
     }
 
+    /// <inheritdoc/>
     public async Task<OptionCollection?> GetLayoutOptionsAsync(int layoutID, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -185,6 +202,7 @@ public partial class DoricoRemote : IDoricoRemote
         return ((OptionsListResponse?)response)?.Options;
     }
 
+    /// <inheritdoc/>
     public async Task<OptionCollection?> GetNotationOptionsAsync(int flowID, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -197,6 +215,7 @@ public partial class DoricoRemote : IDoricoRemote
         return ((OptionsListResponse?)response)?.Options;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, IEnumerable<int>? layoutIds = null, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -209,6 +228,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (Response?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, LayoutIds layoutIds, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -221,6 +241,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (Response?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<Response?> SetNotationOptionsAsync(IEnumerable<OptionValue> optionValues, IEnumerable<int>? flowIds = null, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -233,6 +254,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (Response?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<Response?> SetNotationOptionsAsync(IEnumerable<OptionValue> optionValues, FlowIds flowIds, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -245,6 +267,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (Response?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<Response?> SetEngravingOptionsAsync(IEnumerable<OptionValue> optionValues, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -257,6 +280,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (Response?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<FlowsListResponse?> GetFlowsAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -269,6 +293,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (FlowsListResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<LayoutsListResponse?> GetLayoutsAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -281,6 +306,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (LayoutsListResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<LibraryCollectionsListResponse?> GetLibraryCollectionsAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -293,6 +319,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (LibraryCollectionsListResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<LibraryEntityCollection?> GetLibraryEntitiesAsync(string collection, CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -305,6 +332,7 @@ public partial class DoricoRemote : IDoricoRemote
         return ((LibraryEntitiesListResponse?)response)!.LibraryEntities;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<PlaybackTechniquesListResponse?> GetPlaybackTechniquesAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -317,6 +345,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (PlaybackTechniquesListResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<PropertiesListResponse?> GetPropertiesAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -329,6 +358,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (PropertiesListResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<StatusResponse?> GetStatusAsync(CancellationToken? cancellationToken = null)
     {
         AssertConnected();
@@ -341,6 +371,7 @@ public partial class DoricoRemote : IDoricoRemote
         return (StatusResponse?)response;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<IDoricoResponse?> SendRequestAsync(IDoricoRequest request, CancellationToken? cancellationToken = null)
     {
         Guard.IsNotNull(request);

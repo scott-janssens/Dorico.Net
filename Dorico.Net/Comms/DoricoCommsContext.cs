@@ -29,25 +29,25 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
     #region LoggerMessages
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Connection opened")]
+    [LoggerMessage(LogLevel.Information, "Connection opened")]
     partial void LogConnectionOpened();
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Connection closed: status description: {CloseStatusDescription}")]
+    [LoggerMessage(LogLevel.Information, "Connection closed: status description: {CloseStatusDescription}")]
     partial void LogConnectionClosed(string? closeStatusDescription);
 
-    [LoggerMessage(LogLevel.Debug, "Dorico.NET - Message received: {Message}\n{Content}")]
+    [LoggerMessage(LogLevel.Debug, "Message received: {Message}\n{Content}")]
     partial void LogMessageReceived(string message, string content);
 
-    [LoggerMessage(LogLevel.Debug, "Dorico.NET - sent Request: {RequestType}\n{Content}")]
+    [LoggerMessage(LogLevel.Debug, "sent Request: {RequestType}\n{Content}")]
     partial void LogMessageSent(Type requestType, string content);
 
-    [LoggerMessage(LogLevel.Error, "Dorico.NET - unknown response received:\n{Content}")]
+    [LoggerMessage(LogLevel.Error, "unknown response received:\n{Content}")]
     partial void LogUnknownResponseError(string content);
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Request '{RequestType}' cancelled.")]
+    [LoggerMessage(LogLevel.Information, "Request '{RequestType}' cancelled.")]
     partial void LogRequestCancelled(string requestType);
 
-    [LoggerMessage(LogLevel.Information, "Dorico.NET - Request '{RequestType}' timed out.")]
+    [LoggerMessage(LogLevel.Information, "Request '{RequestType}' timed out.")]
     partial void LogRequestTimedOut(string requestType);
 
     #endregion

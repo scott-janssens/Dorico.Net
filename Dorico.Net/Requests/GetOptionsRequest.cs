@@ -4,16 +4,29 @@ using DoricoNet.Responses;
 
 namespace DoricoNet.Requests;
 
+/// <summary>
+/// Requests information about a specified set of properties.
+/// </summary>
 public record GetOptionsRequest : DoricoRequestBase<OptionsListResponse>
 {
     private readonly string _idString;
 
+    /// <inheritdoc/>
     public override string Message => $"{{\"message\": \"getoptions\", \"optionsType\": \"{OptionsType}\"{_idString}}}";
 
+    /// <inheritdoc/>
     public override string MessageId => "getoptions";
 
+    /// <summary>
+    /// The type of options being requested.
+    /// </summary>
     public OptionsType OptionsType { get; }
 
+    /// <summary>
+    /// GetOptionsRequest constructor.
+    /// </summary>
+    /// <param name="optionsType">The type of options to request.</param>
+    /// <param name="id">A layout ID for OptionType.kLayout, a flow ID for OptionType.kNotation, otherwise null.</param>
     public GetOptionsRequest(OptionsType optionsType, int? id = null)
     {
         OptionsType = optionsType;

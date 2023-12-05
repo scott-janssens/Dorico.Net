@@ -10,5 +10,6 @@ namespace DoricoNet.Responses;
 /// <param name="PlaybackTechniqueId">An associated playback technique ID, if there is one for this entity type</param>
 public sealed record LibraryEntity(string EntityId, string Name, string? PlaybackTechniqueId) : IOrganizable
 {
+    /// <inheritdoc/>
     Func<string> IOrganizable.GetNameValue => () => Name;
 }
