@@ -7,6 +7,8 @@ Version 0.2.0-beta
 
 See Example app for usage.
 
+This code has been tested with Dorico Pro 5 on Windows 11.
+
 Leave feedback or open a branch if there's a common functionality you think should be added.
 
 Internally, Dorico uses a command system to realize each piece of functionality. These commands are echoed in the application.log file (**On Windows:** C:\Users\\[UserName]\AppData\Roaming\Steinberg\Dorico 5\application.log, **On Mac:** /Library/Users/[UserName]/Application Support/Steinberg/Dorico 5). For example, opening a score generates a command "File.Open?File=[Path]".  Dorico's API allows you to send these commands to be executed.  (Some seem to be disabled, such as "File.New".) Bear in mind that this is not a plugin, so any UI is external to Dorico.
