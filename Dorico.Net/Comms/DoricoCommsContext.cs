@@ -16,7 +16,15 @@ using System.Text.Json.Nodes;
 namespace DoricoNet.Comms;
 
 /// <summary>
-/// Abstraction for communicating with Dorico
+/// Abstraction for communicating with Dorico.
+/// 
+/// Dorico communicates via a WebSocket, when Dorico.Net sends a request, Dorico sends a response. These messages are in JSON format.
+/// 
+/// Dorico's responses return in the same order as it recieved the requests. If multiple requests are sent in quick succession, the 
+/// responses will be in the same order.  When calling SendAsync(), the method waits for its response before returning.
+/// 
+/// Dorico also sends some messages without being promted by a request.  StatusResponse and SelectionChanged are good examples. When
+/// this happens, The repsonses are published via an event aggregator (Lea). 
 /// </summary>
 public partial class DoricoCommsContext : IDoricoCommsContext
 {
