@@ -131,7 +131,7 @@ public record Note
 
     /// <summary>
     /// returns a new Note object with the enharmonic value of the original. Ex: if the original note pitch
-    /// is C#4, the returned enharmonic pitch is Db4. If the orignal pitch is not sharp or flat, the new 
+    /// is C#4, the returned enharmonic pitch is Db4. If the original pitch is not sharp or flat, the new 
     /// Note object is equal to (but not the same as) the original.
     /// </summary>
     /// <returns></returns>

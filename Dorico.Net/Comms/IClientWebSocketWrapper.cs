@@ -29,7 +29,7 @@ public interface IClientWebSocketWrapper
     Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription);
 
     /// <summary>
-    /// Recieve a response from Dorico.
+    /// Receive a response from Dorico.
     /// </summary>
     /// <param name="buffer">An ArraySegment to store the response.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>

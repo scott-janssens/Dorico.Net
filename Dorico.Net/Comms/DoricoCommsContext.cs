@@ -20,11 +20,11 @@ namespace DoricoNet.Comms;
 /// 
 /// Dorico communicates via a WebSocket, when Dorico.Net sends a request, Dorico sends a response. These messages are in JSON format.
 /// 
-/// Dorico's responses return in the same order as it recieved the requests. If multiple requests are sent in quick succession, the 
+/// Dorico's responses return in the same order as it received the requests. If multiple requests are sent in quick succession, the 
 /// responses will be in the same order.  When calling SendAsync(), the method waits for its response before returning.
 /// 
-/// Dorico also sends some messages without being promted by a request.  StatusResponse and SelectionChanged are good examples. When
-/// this happens, The repsonses are published via an event aggregator (Lea). 
+/// Dorico also sends some messages without being tromped by a request.  StatusResponse and SelectionChanged are good examples. When
+/// this happens, The responses are published via an event aggregator (Lea). 
 /// </summary>
 public partial class DoricoCommsContext : IDoricoCommsContext
 {
@@ -52,7 +52,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     [LoggerMessage(LogLevel.Error, "unknown response received:\n{Content}")]
     partial void LogUnknownResponseError(string content);
 
-    [LoggerMessage(LogLevel.Information, "Request '{RequestType}' cancelled.")]
+    [LoggerMessage(LogLevel.Information, "Request '{RequestType}' canceled.")]
     partial void LogRequestCancelled(string requestType);
 
     [LoggerMessage(LogLevel.Information, "Request '{RequestType}' timed out.")]
@@ -170,7 +170,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
         if (request.IsAborted)
         {
-            throw new DoricoException("Request was cancelled or timed out.");
+            throw new DoricoException("Request was canceled or timed out.");
         }
     }
 

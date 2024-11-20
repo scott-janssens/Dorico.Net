@@ -38,9 +38,9 @@ public class OrganizedTreeListNode<T>
 
     /// <summary>
     /// OrganizedTreeListNode constructor. The collection passed in organized in a tree structure
-    /// with this node becomming the root node.
+    /// with this node becoming the root node.
     /// </summary>
-    /// <param name="enumerable">A collcation of objects to be organized.</param>
+    /// <param name="enumerable">A collection of objects to be organized.</param>
     /// <param name="path"></param>
     /// <exception cref="InvalidOperationException"></exception>
     public OrganizedTreeListNode(IEnumerable<T> enumerable, string path = ".")

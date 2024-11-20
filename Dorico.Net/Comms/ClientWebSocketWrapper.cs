@@ -45,7 +45,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     [LoggerMessage(LogLevel.Trace, "Sent data to WebSocket, Type: {MessageType}, EoM: {EndOfMessage}")]
     partial void LogSent(WebSocketMessageType messageType, bool endOfMessage);
 
-    [LoggerMessage(LogLevel.Trace, "Recieved data from WebSocket: {Data}")]
+    [LoggerMessage(LogLevel.Trace, "Received data from WebSocket: {Data}")]
     partial void LogReceived(string? data);
 
     #endregion
@@ -116,7 +116,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
 
         LogClosing(closeStatus, statusDescription);
 
-        // forcing CancellationToken.None sending an already cancelled token seems to have no effect.
+        // forcing CancellationToken.None sending an already canceled token seems to have no effect.
         await _clientWebSocket!.CloseAsync(closeStatus, statusDescription, CancellationToken.None).ConfigureAwait(false);
 
         LogClosed(closeStatus, statusDescription);

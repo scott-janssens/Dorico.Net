@@ -39,7 +39,7 @@ public class DoricoRemoteIntegrationTests
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        // Test several cancelled connection attempts up front to minimize the number of times the user needs
+        // Test several canceled connection attempts up front to minimize the number of times the user needs
         // to click OK on the Dorico connection dialog.
         var source = new CancellationTokenSource();
         source.Cancel();
@@ -213,7 +213,7 @@ public class DoricoRemoteIntegrationTests
         }
         catch (DoricoException ex)
         {
-            Assert.That(ex.Message, Is.EqualTo("Request was cancelled or timed out."));
+            Assert.That(ex.Message, Is.EqualTo("Request was canceled or timed out."));
         }
         catch
         {

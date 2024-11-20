@@ -23,8 +23,8 @@ var serviceProvider = services.BuildServiceProvider();
 var remote = serviceProvider.GetService<IDoricoRemote>()!;
 
 // Set remote timeout to infinite. This will prevent timing out if you set breakpoints
-// or step through this demo. It is note recommended to do this in a real client application.
-// The default is 30 seonds.
+// or step through this demo. It is not recommended to do this in a real client application.
+// The default is 30 seconds.
 remote.Timeout = -1;
 
 // Connect to Dorico (Dorico must be open)
@@ -81,14 +81,14 @@ var fileOpenResponse = await remote.SendRequestAsync(new Command("File.Open", ne
 
 // Currently there is no documentation from the Dorico team about what the parameters mean or what the valid values may be.
 // The best way to see the commands work is to perform the desired operation in Dorico and look at the application.log where
-// Dorico echos the commands and parameters.
+// Dorico echoes the commands and parameters.
 
 
 // NOTE: Dorico.Net caches the CommandInfo objects after retrieving them, so subsequent calls to GetCommandsAsync() will
 // not call Dorico.
 
 // NOTE: Dorico returns a "kOK" to acknowledge receipt of the request. That does not necessarily mean the operation was
-// successful.  For example, sending a bad path in the the above File.Open command will receive a "kOK", but the operation
+// successful.  For example, sending a bad path in the above File.Open command will receive a "kOK", but the operation
 // will fail in Dorico.
 
 // NOTE: Some commands, such as those to create projects appear to be disabled through the Remote Control API at the moment.
@@ -145,7 +145,7 @@ if (layoutsResponse != null)
 
 // Sometimes Dorico sends messages when state within Dorico changes.
 // The StatusResponse is a good example of this. Dorico.Net uses an
-// event aggregator called Lea that can be subscribed to recieve
+// event aggregator called Lea that can be subscribed to receive
 // the response when it's received.
 var lea = serviceProvider.GetService<IEventAggregator>();
 lea!.Subscribe<StatusResponse>(OnStatusUpdate);
@@ -173,7 +173,7 @@ await remote.SendRequestAsync(new Command("NoteInput.Enter"));
 await InsertNoteAsync(new("F#", 5));
 
 
-// When done, disconnet nicely
+// When done, disconnect nicely
 await remote.DisconnectAsync();
 Console.WriteLine($"Connected? {remote.IsConnected}");
 
@@ -183,7 +183,7 @@ await Task.Delay(1000);
 async Task InsertNoteAsync(Note note)
 {
     // Force Dorico into Note Input node.  NoteInput.Enter is a toggle, so first
-    // make sure we're not already in Note Input mode otherwish sending
+    // make sure we're not already in Note Input mode otherwise sending
     // NoteInput.Enter will actually exit Note Input mode. The current state can
     // be determined from the most recent StatusResponse.NoteInputActive value,
     // but it's easier to just send a NoteInput.Exit which always causes

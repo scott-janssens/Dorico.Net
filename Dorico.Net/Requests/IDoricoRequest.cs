@@ -18,7 +18,7 @@ public interface IDoricoRequest
     string MessageId { get; }
 
     /// <summary>
-    /// True if the request has been aborted (cancelled or timed out), otherwise false.
+    /// True if the request has been aborted (canceled or timed out), otherwise false.
     /// </summary>
     bool IsAborted { get; }
 

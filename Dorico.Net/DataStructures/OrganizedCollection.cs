@@ -34,7 +34,7 @@ public abstract class OrganizedCollection<T> : ICollection<T>
     }
 
     /// <summary>
-    /// Returns the root node of a tree structure containg the organized items.
+    /// Returns the root node of a tree structure containing the organized items.
     /// </summary>
     public OrganizedTreeListNode<T>? OrganizedItems =>
         _organizedTreeRoot ??= new OrganizedTreeListNode<T>(_items.Values);

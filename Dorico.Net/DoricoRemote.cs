@@ -13,7 +13,7 @@ using System.Runtime.CompilerServices;
 namespace DoricoNet;
 
 /// <summary>
-/// Base class for controling Dorico remotely. It encapsulates all the core functionality 
+/// Base class for controlling Dorico remotely. It encapsulates all the core functionality 
 /// of the Dorico remote API.  Specific functionality, such as executing particular commands
 /// or a series of commands, is expected to be implemented in inheriting classes.
 /// </summary>
@@ -432,7 +432,7 @@ public partial class DoricoRemote : IDoricoRemote
     {
         if (request.IsAborted)
         {
-            throw new DoricoException("Request was cancelled or timed out.");
+            throw new DoricoException("Request was canceled or timed out.");
         }
 
         if (response != null && response is Response errorResponse && errorResponse.Code == "kError")

@@ -142,7 +142,7 @@ public interface IDoricoRemote
     Task<StatusResponse?> GetStatusAsync(CancellationToken? cancellationToken = null);
 
     /// <summary>
-    /// Set the specified layout option values for the layouts whose IDs are are in the layoutIds collection.
+    /// Set the specified layout option values for the layouts whose IDs are in the layoutIds collection.
     /// </summary>
     /// <param name="optionValues">A collection of OptionValue objects.</param>
     /// <param name="layoutIds">A collection of layout IDs to affect.</param>
@@ -160,7 +160,7 @@ public interface IDoricoRemote
     Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, LayoutIds layoutIds, CancellationToken? cancellationToken = null);
 
     /// <summary>
-    /// Set the specified notation option values for the flows whose IDs are are in the layoutIds collection.
+    /// Set the specified notation option values for the flows whose IDs are in the layoutIds collection.
     /// </summary>
     /// <param name="optionValues">A collection of OptionValue objects.</param>
     /// <param name="flowIds">A collection of flow IDs to affect.</param>

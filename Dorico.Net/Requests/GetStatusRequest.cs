@@ -3,7 +3,7 @@
 namespace DoricoNet.Requests;
 
 /// <summary>
-/// Requests Dorico echos back the current status.
+/// Requests Dorico echoes back the current status.
 /// </summary>
 public record GetStatusRequest : DoricoRequestBase<StatusResponse>
 {
