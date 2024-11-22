@@ -32,6 +32,11 @@ public interface IDoricoRemote
     int Timeout { get; set; }
 
     /// <summary>
+    /// The most recent status information from Dorico.
+    /// </summary>
+    StatusResponse? CurrentStatus { get; }
+
+    /// <summary>
     /// Opens communication with Dorico.
     /// </summary>
     /// <param name="connectionArguments">A ConnectionArguments object</param>

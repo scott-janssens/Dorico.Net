@@ -34,7 +34,7 @@ public class DoricoRemoteTests
 
         _mockComms = new Mock<IDoricoCommsContext>();
 
-        _remote = new(_mockComms.Object, _mockEventAggregator.Object, _mockLogger.Object);
+        _remote = new(_mockComms.Object, _mockLogger.Object);
     }
 
     [Test]

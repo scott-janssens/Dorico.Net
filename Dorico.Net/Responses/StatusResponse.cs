@@ -148,7 +148,7 @@ public record StatusResponse : DoricoUnpromptedResponseBase
     /// </summary>
     public ToolType ToolType { get; init; }
 
-    public string? ZoomPercent { get; init; }
+    public int? ZoomPercent { get; init; }
 
     public bool? NoteInputActive { get; init; }
 
@@ -159,4 +159,23 @@ public record StatusResponse : DoricoUnpromptedResponseBase
     public bool? TransportShown { get; init; }
 
     public bool? FullScreen { get; init; }
+
+    /// <summary>
+    /// UNDOCUMENTED: Seems to be set only on the first automatic Status response after a selection change
+    /// is made, and then only when a note or rest is selected. If the note is tied and doesn't fall into
+    /// a nice rhythmic value, Duration will not be set. E.g., a crotchet tied to a quaver will return kCrotchet
+    /// for duration and 1 for RhythmDots.  However a dotted crotchet tied to a crotchet will not return either
+    /// Duration or RhythmDots.
+    /// </summary>
+    public RhythmicGridResolution Duration { get; init; }
+
+    /// <summary>
+    /// UNDOCUMENTED: The number of dots on the rhythm value of Duration to give the selected objects full rhythmic value.
+    /// </summary>
+    public int? RhythmDots { get; init; }
+
+    /// <summary>
+    /// UNDOCUMENTED: Seems to be set when a rest is currently selected.
+    /// </summary>
+    public bool? RestMode { get; init; }
 }

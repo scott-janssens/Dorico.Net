@@ -28,9 +28,14 @@ namespace DoricoNet.Comms
         bool IsRunning { get; }
 
         /// <summary>
-        /// The state of the websocket connection with Dorico.
+        /// The state of the WebSocket connection with Dorico.
         /// </summary>
         WebSocketState State { get; }
+
+        /// <summary>
+        /// The most recent status from Dorico
+        /// </summary>
+        StatusResponse? CurrentStatus { get; }
 
         /// <summary>
         /// Opens connection with Dorico and starts receiving messages.

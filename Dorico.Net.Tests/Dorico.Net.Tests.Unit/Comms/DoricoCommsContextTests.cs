@@ -329,7 +329,7 @@ public class DoricoCommsContextTests
     }
 
     [Test]
-    public async Task SendAsyncCancelled()
+    public async Task SendAsyncCanceled()
     {
         _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Open);
         _mockWebSocket.Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))

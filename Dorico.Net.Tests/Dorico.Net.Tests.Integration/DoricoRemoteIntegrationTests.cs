@@ -80,7 +80,7 @@ public class DoricoRemoteIntegrationTests
 
         if (string.IsNullOrWhiteSpace(_sessionToken))
         {
-            // Test cancel opening websocket
+            // Test cancel opening WebSocket
             Assert.ThrowsAsync<DoricoException>(async () =>
                 await _remote.ConnectAsync(_clientName, connArgsNoWebSocketConnectMock.Object).ConfigureAwait(false));
 
