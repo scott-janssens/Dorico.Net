@@ -9,6 +9,8 @@ namespace DoricoNet.Responses;
 [ResponseMessage("status")]
 public record StatusResponse : DoricoUnpromptedResponseBase
 {
+    internal static StatusResponse Create() => new StatusResponse { Message = "status" };
+
     /// <summary>
     /// The ID of the active score
     /// </summary>
@@ -161,11 +163,10 @@ public record StatusResponse : DoricoUnpromptedResponseBase
     public bool? FullScreen { get; init; }
 
     /// <summary>
-    /// UNDOCUMENTED: Seems to be set only on the first automatic Status response after a selection change
-    /// is made, and then only when a note or rest is selected. If the note is tied and doesn't fall into
+    /// UNDOCUMENTED: The selected duration found in the Notes panel in the left zone. If the note is tied and doesn't fall into
     /// a nice rhythmic value, Duration will not be set. E.g., a crotchet tied to a quaver will return kCrotchet
     /// for duration and 1 for RhythmDots.  However a dotted crotchet tied to a crotchet will not return either
-    /// Duration or RhythmDots.
+    /// Duration or RhythmDots.  This is the same as the duration selection behavior in Dorico.
     /// </summary>
     public RhythmicGridResolution Duration { get; init; }
 
@@ -178,4 +179,22 @@ public record StatusResponse : DoricoUnpromptedResponseBase
     /// UNDOCUMENTED: Seems to be set when a rest is currently selected.
     /// </summary>
     public bool? RestMode { get; init; }
+
+    public bool ShowHiddenNoteheadsInGrey { get; init; }
+	public bool HighlightMIDITriggerRegions { get; init; }
+	public bool ShowPageNumbersOverlay { get; init; }
+	public bool ShowCautionaryAccidentals { get; init; }
+	public bool ShowAccidentalsWithForcedVisibility { get; init; }
+	public bool ActivatedForPlayback { get; init; }
+	public bool ArticulationAccent { get; init; }
+	public bool ArticulationStaccato { get; init; }
+	public bool ArticulationMarcato { get; init; }
+	public bool ArticulationTenuto { get; init; }
+	public bool ArticulationStaccatissimo { get; init; }
+	public bool ArticulationStaccatoTenuto { get; init; }
+	public bool ArticulationStressed { get; init; }
+	public bool ArticulationUnstressed { get; init; }
+	public Accidental Accidental { get; init; }
+	public bool GraceNoteSlashed { get; init; }
+	public bool GraceNoteUnslashed {  get; init;  }
 }

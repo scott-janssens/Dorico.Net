@@ -8,6 +8,9 @@ using DoricoNet.Responses;
 using Lea;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 // Setup dependency injection
 var services = new ServiceCollection()
@@ -40,7 +43,7 @@ Console.WriteLine($"Connected? {remote.IsConnected}");
 Console.WriteLine($"Session Token: {remote.SessionToken}");
 
 
-// The version of Dorcio can be retrieved with the GetAppInfoAsync() method.
+// The version of Dorico can be retrieved with the GetAppInfoAsync() method.
 var versionResponse = await remote.GetAppInfoAsync();
 Console.WriteLine($"version: {versionResponse}\n");
 
@@ -142,36 +145,113 @@ if (layoutsResponse != null)
     await remote.SetLayoutOptionsAsync(new[] { new OptionValue("transpositionType", "kScoreInC") }, LayoutIds.kAll);
 }
 
+// Dorico sends unprompted status messages a LOT.  Dorico.Net uses an
+// event aggregator called Lea that can be subscribed to, to receive
+// unprompted responses when they are received.
 
-// Sometimes Dorico sends messages when state within Dorico changes.
-// The StatusResponse is a good example of this. Dorico.Net uses an
-// event aggregator called Lea that can be subscribed to receive
-// the response when it's received.
-var lea = serviceProvider.GetService<IEventAggregator>();
-lea!.Subscribe<StatusResponse>(OnStatusUpdate);
+var lea = serviceProvider.GetService<IEventAggregator>()!;
+//lea.Subscribe<StatusResponse>(OnStatusUpdate);
 
-void OnStatusUpdate(StatusResponse statusResponse)
-{
-    Console.WriteLine($"\nStatus:\n {statusResponse}");
+//void OnStatusUpdate(StatusResponse statusResponse)
+//{
+//    Console.WriteLine($"\nStatus:\n {statusResponse}");
 
-    // Status is sent a lot, so we'll unsubscribe after 1 demo.
-    lea.Unsubscribe<StatusResponse>(OnStatusUpdate);
-}
+//    // Status is sent a lot, so we'll unsubscribe after 1 demo.
+//    lea.Unsubscribe<StatusResponse>(OnStatusUpdate);
+//}
 
 // Entering NoteInput mode will cause a status update
 await remote.SendRequestAsync(new Command("NoteInput.Enter"));
 
 
 // Making changes within Dorico is currently limited to essentially what you can
-// do via the menu in Dorico.  Via Status you can tell what is currently selected
-// and perform operations within that context. However, you can't query for
-// information about a bar, stave, or project in general. 
+// do via the menu in Dorico.  Via Status limited information can be inferred about what
+// is selected.  If a note or rest is selected, the StatusResponse.Duration will be set.
+// If StatusResponse.RestMode is true, a rest is selected. Be aware that RestMode.Duration
+// may not be populated if a selected note's duration doesn't fall into a
+// RhythmicGridResolution value.  There is currently no way to differentiate between any
+// other item types that might be selected.
+
+// There is currently no way to query for information about a bar, stave, or project in general. 
 
 // It's possible to make changes, but you're at the mercy of whatever is currently
 // selected or wherever the caret currently is.  When the "NoteInput.Enter" was 
 // sent above, the caret appeared wherever the current selection was.
-await InsertNoteAsync(new("F#", 5));
 
+
+// Let's add some notes:
+
+// NoteInput.Enter is a toggle, so first make sure we're not already in Note Input mode
+// otherwise sending NoteInput.Enter will actually exit Note Input mode. The current state
+// can be determined from the most recent StatusResponse.NoteInputActive value, but it's
+// easier to just send a NoteInput.Exit which always forces NoteInputActive to false;
+await remote.SendRequestAsync(new Command("NoteInput.Exit"));
+await remote.SendRequestAsync(new Command("NoteInput.Enter"));
+
+await InsertNoteAsync(new("F#", 5));
+await InsertNoteAsync(new("D", 5));
+await remote.SendRequestAsync(new Command("NoteInput.MoveAdvance")); // Advance the caret to create a rest
+await InsertNoteAsync(new("Bb", 4));
+
+// Exit Note Input mode.
+await remote.SendRequestAsync(new Command("NoteInput.Exit"));
+
+// Break on the next line to allow the selection to be changed in Dorico.
+//System.Diagnostics.Debugger.Break();
+SemaphoreSlim _ss = new(1, 1);
+
+lea.Subscribe<SelectionChanged>(SelectionChangedHandler);
+lea.Subscribe<StatusResponse>(StatusChangedHandler);
+
+async void SelectionChangedHandler(SelectionChanged evt)
+{
+    // When the selection transitions to something selected to no selection, or vice versa, Dorico sends two
+    // unprompted status responses, one before and one after the selection changed message.  These contain
+    // partial data.  Only the first message will have the hasSelection value present.
+
+    // If a note or rest is selected, check the values of Duration, RhythmDots, and RestMode.
+    // If something else is selected, those properties will not be set.
+
+    //Console.WriteLine($"\n\nHasSelection? {remote.CurrentStatus?.HasSelection}");
+    //Console.WriteLine($"Duration: {remote.CurrentStatus?.Duration}");
+    //Console.WriteLine($"RhythmDots: {remote.CurrentStatus?.RhythmDots}");
+    //Console.WriteLine($"RestMode: {remote.CurrentStatus?.RestMode?.ToString() ?? "null"}");
+
+    await WriteStatus(null);
+}
+
+async void StatusChangedHandler(StatusResponse evt)
+{
+    await WriteStatus(evt);
+}
+
+async Task WriteStatus(StatusResponse? evt)
+{
+    await _ss.WaitAsync();
+    if (evt == null)
+    {
+        Console.WriteLine("\n\nSelection Changed");
+    }
+    else
+    {
+        //Console.WriteLine($"\n\n{evt.RawJson}");
+        Console.WriteLine($"HasSelection: {evt.HasSelection}");
+    }
+    _ss.Release();
+}
+
+
+// NOTE! When the selection is changed, Dorico sends a SelectionChanged event and then a partial Status
+// update.  This partial status update does not include the StatusResponse.HasSelection value.  Be aware
+// of this when using the subscribing to the event aggregator for these events.
+
+
+
+//CreateMetaFile();
+
+Console.Write("\n\nPress any key to exit.");
+Console.ReadKey(true);
+Console.WriteLine();
 
 // When done, disconnect nicely
 await remote.DisconnectAsync();
@@ -182,21 +262,46 @@ await Task.Delay(1000);
 
 async Task InsertNoteAsync(Note note)
 {
-    // Force Dorico into Note Input node.  NoteInput.Enter is a toggle, so first
-    // make sure we're not already in Note Input mode otherwise sending
-    // NoteInput.Enter will actually exit Note Input mode. The current state can
-    // be determined from the most recent StatusResponse.NoteInputActive value,
-    // but it's easier to just send a NoteInput.Exit which always causes
-    // NoteInputActive to be false;
-    await remote!.SendRequestAsync(new Command("NoteInput.Exit"));
-    await remote!.SendRequestAsync(new Command("NoteInput.Enter"));
-
-    // Since Dorico doesn't set the accidental as part of the pitch, the Note class
-    // has a helper that return the commands required to set the note.
+    // Since Dorico doesn't set the accidental as part of the pitch, the Note class has a helper
+    // that returns the commands required to set the note and advance the caret.
     foreach (var command in note.GetNoteCommands())
     {
-        await remote!.SendRequestAsync(command);
+        await remote.SendRequestAsync(command);
     }
+}
 
-    await remote!.SendRequestAsync(new Command("NoteInput.Exit"));
+void CreateMetaFile()
+{
+    const string metaFolder = @"Dorico.Net\Meta";
+    var metaDir = Environment.CurrentDirectory.Split(@"\DoricoNetExample")[0];
+    
+    var metaFile = Path.Combine(metaDir, metaFolder, "MetaData.json");
+    using var commadnsStream = new FileStream(metaFile, FileMode.Create);
+    using var streamWriter = new StreamWriter(commadnsStream);
+    streamWriter.Write(JsonSerializer.Serialize(new MetaDataObject
+    {
+        Version = versionResponse?.ToString(),
+        Commands = commands,
+        EngravingOptions = engravingOptions,
+        NotationOptions = notationOptions,
+        LayoutOptions = layoutOptions
+    },
+    new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
+}
+
+class MetaDataObject
+{
+    public string? Version { get; init; }
+
+    public int CommandsCount => Commands?.Count ?? 0;
+    public CommandCollection? Commands { get; init; }
+
+    public int EngravingOptionsCount => EngravingOptions?.Count ?? 0;
+    public OptionCollection? EngravingOptions { get; init; }
+
+    public int NotationOptionsCount => NotationOptions?.Count ?? 0;
+    public OptionCollection? NotationOptions { get; init; }
+    
+    public int LayoutOptionsCount => LayoutOptions?.Count ?? 0;
+    public OptionCollection? LayoutOptions { get; init; }
 }

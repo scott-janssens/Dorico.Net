@@ -62,7 +62,7 @@ public abstract class OrganizedCollection<T> : ICollection<T>
     IEnumerator IEnumerable.GetEnumerator() => _items.Values.GetEnumerator();
 
     /// <inheritdoc/>
-    public void Clear() => ThrowHelper.ThrowNotSupportedException();
+    public void Clear() => throw new NotSupportedException();
 
     /// <inheritdoc/>
     public bool Contains(T item)
@@ -72,12 +72,11 @@ public abstract class OrganizedCollection<T> : ICollection<T>
     }
 
     /// <inheritdoc/>
-    public void CopyTo(T[] array, int arrayIndex) => ThrowHelper.ThrowNotSupportedException();
+    public void CopyTo(T[] array, int arrayIndex) => throw new NotSupportedException();
 
     /// <inheritdoc/>
     public bool Remove(T item)
     {
-        ThrowHelper.ThrowNotSupportedException();
-        return false;
+        throw new NotSupportedException();
     }
 }

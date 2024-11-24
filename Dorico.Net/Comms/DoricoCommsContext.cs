@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DoricoNet.Attributes;
 using DoricoNet.Exceptions;
+using DoricoNet.Json;
 using DoricoNet.Requests;
 using DoricoNet.Responses;
 using Lea;
@@ -36,7 +37,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     private readonly ILogger _logger;
     private readonly IClientWebSocketWrapper _webSocket;
     private readonly JsonSerializerOptions _jsonSerializationOptions = new() { PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
-    private string _lastStatusContent = string.Empty;
+    private string _lastStatusContent;
 
     #region LoggerMessages
 
@@ -106,6 +107,8 @@ public partial class DoricoCommsContext : IDoricoCommsContext
         _eventAggregator = eventAggregator;
         _logger = logger;
         _responseTypeMap = BuildResponseTypeMap();
+
+        _lastStatusContent = JsonSerializer.Serialize(StatusResponse.Create());
     }
 
     /// <inheritdoc/>
@@ -183,10 +186,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     /// <inheritdoc/>
     public async Task StopAsync(CancellationToken cancellationToken, int timeout = -1)
     {
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException($"WebSocket connection is not open: {State}.");
-        }
+        _webSocket.AssertSocketOpen();
 
         var request = new DisconnectRequest();
         await SendAsync(request, cancellationToken, timeout).ConfigureAwait(false);
@@ -201,11 +201,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     public async Task<IDoricoResponse?> SendAsync(IDoricoRequest request, CancellationToken cancellationToken, int timeout = 30000)
     {
         Guard.IsNotNull(request, nameof(request));
-
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException($"WebSocket connection is not open: {State}.");
-        }
+        _webSocket.AssertSocketOpen();
 
         var sendBytes = Encoding.UTF8.GetBytes(request.Message);
         var sendBuffer = new ArraySegment<byte>(sendBytes);
@@ -333,20 +329,23 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
         DoricoResponseBase? responseObj = null;
 
-        // Filter out consecutive identical status responses
         if (content.Contains("\"message\": \"status\"", StringComparison.Ordinal))
         {
-            if (content == _lastStatusContent &&
-                _responseQueue.TryPeek(out var requestInfo) &&
-                requestInfo.Request.ResponseType == typeof(StatusResponse))
+            if (!_responseQueue.TryPeek(out var requestInfo) || requestInfo!.Request.ResponseType != typeof(StatusResponse))
             {
-                responseObj = CurrentStatus;
-            }
+                // non requested status response are likely to be partial payloads.
+                // Apply these as a patch to the current status.
 
-            _lastStatusContent = content;
+                _lastStatusContent = JsonUtils.Merge(_lastStatusContent, content, true);
+                responseObj = JsonSerializer.Deserialize<StatusResponse>(_lastStatusContent, _jsonSerializationOptions);
+            }
+            else
+            {
+                _lastStatusContent = content;
+            }
         }
 
-        responseObj = responseObj ?? (DoricoResponseBase?)JsonSerializer.Deserialize(
+        responseObj ??= (DoricoResponseBase?)JsonSerializer.Deserialize(
             content,
             responseType,
             _jsonSerializationOptions);

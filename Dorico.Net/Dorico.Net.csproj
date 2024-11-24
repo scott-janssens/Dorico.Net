@@ -51,4 +51,8 @@ The Dorico trademark is registered in the US, Europe and other countries by Stei
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Meta\" />
+  </ItemGroup>
+
 </Project>

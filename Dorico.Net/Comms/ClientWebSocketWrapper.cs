@@ -3,6 +3,7 @@ using DoricoNet.Exceptions;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 
 namespace DoricoNet.Comms;
 
@@ -86,7 +87,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
 
         if (State == WebSocketState.Open)
         {
-            ThrowHelper.ThrowInvalidOperationException("WebSocket is already connected.");
+            throw new InvalidOperationException("WebSocket is already connected.");
         }
 
         LogConnecting(uri.ToString());
@@ -109,10 +110,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     /// <inheritdoc/>
     public async Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription)
     {
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException("WebSocket is not open.");
-        }
+        AssertSocketOpen();
 
         LogClosing(closeStatus, statusDescription);
 
@@ -128,10 +126,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     /// <inheritdoc/>
     public async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
     {
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException("WebSocket is not open.");
-        }
+        AssertSocketOpen();
 
         try
         {
@@ -148,10 +143,7 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     /// <inheritdoc/>
     public async Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken cancellationToken)
     {
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException("WebSocket is not open.");
-        }
+        AssertSocketOpen();
 
         var response = await _clientWebSocket!.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
         LogReceived(buffer.ToString());
@@ -170,5 +162,14 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
         }
 
         return response;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AssertSocketOpen()
+    {
+        if (State != WebSocketState.Open)
+        {
+            throw new InvalidOperationException($"WebSocket connection is not open: {State}.");
+        }
     }
 }
