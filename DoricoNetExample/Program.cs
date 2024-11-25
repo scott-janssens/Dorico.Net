@@ -8,13 +8,12 @@ using DoricoNet.Responses;
 using Lea;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 // Setup dependency injection
 var services = new ServiceCollection()
-    .AddSingleton(sp => LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("DoricoRemote"))
+    .AddSingleton(sp => LoggerFactory.Create(builder => 
+        builder.AddFilter("DoricoRemote", LogLevel.Information).AddConsole()).CreateLogger("DoricoRemote"))
     .AddSingleton<IEventAggregator, EventAggregator>()
     .AddTransient<IClientWebSocketWrapper, ClientWebSocketWrapper>()
     .AddSingleton<IDoricoCommsContext, DoricoCommsContext>()
@@ -61,60 +60,96 @@ if (commands != null)
         Console.WriteLine($"\"{command.DisplayName}\", {command.Name}");
     }
 
+    // Show the top level tree nodes, but we won't recurse down in this demo.
     var node = commands.OrganizedItems!.ChildNodes.First();
-    Console.WriteLine($"\nNode:{node.Path}\n");
+    Console.WriteLine($"\nNode: {node.Path}\n");
     node.Values.ForEach(x => Console.WriteLine($"  \"{x.DisplayName}\", {x.Name}"));
 }
 
-// The CommandCollection contains CommandInfo records which describe the commands. Each contains lists of required and
-// optional parameters. These can be used to initialize Command request objects which are sent to Dorico to perform
-// an operation. Parameters can be passed into the constructor or added with the AddParameter() method.
+// The CommandCollection contains CommandInfo records which describe the various commands. Each CommandInfo object
+// contains lists of required and optional parameters.
 
-// commands can be sent to Dorico in 2 ways
+var commandInfo = commands!["File.Open"];
+Console.WriteLine($"\nCommand: {commandInfo}");
+
+Console.WriteLine($"  Required Parameters: ");
+foreach (var parameter in commandInfo.RequiredParameters)
+{
+    Console.WriteLine($"      {parameter}");
+}
+
+Console.WriteLine($"  Optional Parameters: ");
+foreach (var parameter in commandInfo.OptionalParameters)
+{
+    Console.WriteLine($"      {parameter}");
+}
+
+Console.WriteLine();
+
+// CommandInfo objects can be used to initialize Command request objects which are sent to Dorico to perform
+// an operation.  Parameters can be passed into the constructor or added with the AddParameter() method.
+
+// Command objects can be sent to Dorico in 2 ways:
+
 // with the raw command/parameter values:
 var fileOpenResponse = await remote.SendRequestAsync(new Command("File.Open", new CommandParameter("File", "<path>")));
 
 // or with a command object from the commands list:
-
-//var commandInfo = commands!["File.Open"];
 //var fileOpenCommand = new Command(commandInfo);
 //fileOpenCommand.AddParameter(new("File", "<path>"));
 //fileOpenResponse = await remote.SendRequestAsync(fileOpenCommand);
 
 
-// Currently there is no documentation from the Dorico team about what the parameters mean or what the valid values may be.
-// The best way to see the commands work is to perform the desired operation in Dorico and look at the application.log where
-// Dorico echoes the commands and parameters.
+// Currently there is no documentation from the Dorico team about what the parameters mean or what the valid values
+// may be.  The best way to see the commands work is to perform the desired operation in Dorico and look at the
+// application.log where Dorico echoes the commands and parameters.
 
 
-// NOTE: Dorico.Net caches the CommandInfo objects after retrieving them, so subsequent calls to GetCommandsAsync() will
-// not call Dorico.
+// NOTE: Dorico.Net caches the CommandInfo objects after retrieving them, so subsequent calls to GetCommandsAsync()
+// will not call Dorico.
 
-// NOTE: Dorico returns a "kOK" to acknowledge receipt of the request. That does not necessarily mean the operation was
-// successful.  For example, sending a bad path in the above File.Open command will receive a "kOK", but the operation
-// will fail in Dorico.
+// NOTE: Dorico returns a "kOK" to acknowledge receipt of the request. That does not necessarily mean the operation
+// was successful.  For example, sending a bad path in the above File.Open command will receive a "kOK", but the
+// operation will fail in Dorico.
 
-// NOTE: Some commands, such as those to create projects appear to be disabled through the Remote Control API at the moment.
+// NOTE: Some commands, such as those to create projects appear to be disabled through the Remote Control API at
+// the moment.
 
 
-// IMPORTANT: At this point in the demo, a project must be loaded in Dorico. Either set a proper path in the Open command above,
-// or manually create a new project in Dorico. Close any error dialogs in Dorico before continuing.
+// IMPORTANT: At this point in the demo, a project must be loaded in Dorico. Either set a proper path in the Open
+// command above, or manually create a new project in Dorico. Close any error dialogs in Dorico before continuing.
 
 
 // Make sure we're not in Note Input mode as the rest of the demo assumes it's off at this point.
 await remote.SendRequestAsync(new Command("NoteInput.Exit"));
 
 
-// Once a project is loaded, the options for that project can be retrieved.
 // The information about the project's flows can be obtained:
 var flowsResponse = await remote.GetFlowsAsync();
+if (flowsResponse != null)
+{
+    foreach (var flow in flowsResponse.Flows)
+    {
+        Console.WriteLine($"Flow ID: {flow.FlowID}, Name: {flow.FlowName}");
+    }
+}
+Console.WriteLine();
 
-// Or the layouts:
+
+// And the layouts:
 var layoutsResponse = await remote.GetLayoutsAsync();
+if (layoutsResponse != null)
+{
+    foreach (var layout in layoutsResponse.Layouts)
+    {
+        Console.WriteLine($"Layout ID: {layout.LayoutID}, Name: {layout.LayoutName}," +
+            $" Number: {layout.LayoutNumber}, Type: {layout.LayoutType}");
+    }
+}
 
 
-// The various options and their values can be retrieved. The OptionsCollection is an
-// OrganizedCollection like the CommandCollection.
+// The various options and their values can be retrieved.
+// The OptionsCollection is an OrganizedCollection like the CommandCollection.
 
 // Engraving options are global
 var engravingOptions = await remote.GetEngravingOptionsAsync();
@@ -137,54 +172,59 @@ if (layoutsResponse != null)
     layoutOptions = await remote.GetLayoutOptionsAsync(layoutId);
     Console.WriteLine($"Layout Options: {layoutOptions?.Count}\n");
 
-    // Modify a layout option of a specific layout. Multiple options can be set at
-    // once on multiple layouts, but we'll just do one of each here.
-    await remote.SetLayoutOptionsAsync(new[] { new OptionValue("transpositionType", "kTransposingScore") }, new[] { layoutId });
+    // Modify a layout option of a specific layout. Multiple options can be set at once on multiple layouts,
+    // but we'll just do one of each here.
+    await remote.SetLayoutOptionsAsync(
+        new[] { new OptionValue("transpositionType", "kTransposingScore") },
+        new[] { layoutId });
 
     // There are also enums to help specify which layouts to affect
-    await remote.SetLayoutOptionsAsync(new[] { new OptionValue("transpositionType", "kScoreInC") }, LayoutIds.kAll);
+    await remote.SetLayoutOptionsAsync(
+        new[] { new OptionValue("transpositionType", "kScoreInC") },
+        LayoutIds.kAll);
 }
 
-// Dorico sends unprompted status messages a LOT.  Dorico.Net uses an
-// event aggregator called Lea that can be subscribed to, to receive
-// unprompted responses when they are received.
+// Dorico sends unprompted status messages a LOT.  Dorico.Net uses an event aggregator called Lea that can be
+// subscribed to, to receive unprompted responses when they are received.
 
+var resetEvent = new ManualResetEvent(false);
 var lea = serviceProvider.GetService<IEventAggregator>()!;
-//lea.Subscribe<StatusResponse>(OnStatusUpdate);
+lea.Subscribe<StatusResponse>(StatusChangedHandler);
 
-//void OnStatusUpdate(StatusResponse statusResponse)
-//{
-//    Console.WriteLine($"\nStatus:\n {statusResponse}");
+void StatusChangedHandler(StatusResponse statusResponse)
+{
+    Console.WriteLine($"\nStatus:\n {statusResponse}");
 
-//    // Status is sent a lot, so we'll unsubscribe after 1 demo.
-//    lea.Unsubscribe<StatusResponse>(OnStatusUpdate);
-//}
+    // Status is sent a lot, so we'll unsubscribe after 1 demo.
+    lea.Unsubscribe<StatusResponse>(StatusChangedHandler);
+    resetEvent.Set();
+}
 
 // Entering NoteInput mode will cause a status update
 await remote.SendRequestAsync(new Command("NoteInput.Enter"));
 
+// Wait until we process and display the Status message
+resetEvent.WaitOne();
 
-// Making changes within Dorico is currently limited to essentially what you can
-// do via the menu in Dorico.  Via Status limited information can be inferred about what
-// is selected.  If a note or rest is selected, the StatusResponse.Duration will be set.
-// If StatusResponse.RestMode is true, a rest is selected. Be aware that RestMode.Duration
-// may not be populated if a selected note's duration doesn't fall into a
-// RhythmicGridResolution value.  There is currently no way to differentiate between any
-// other item types that might be selected.
+
+// Making changes within Dorico is currently limited to essentially what you can do via the menu in Dorico.
+// Via Status, limited information can be inferred about what is selected.
+
+// If a note or rest is selected, the StatusResponse.Duration will be set.  If StatusResponse.RestMode is true, a
+// rest is selected. There is currently no way to differentiate between any other item types that might be selected.
 
 // There is currently no way to query for information about a bar, stave, or project in general. 
 
-// It's possible to make changes, but you're at the mercy of whatever is currently
-// selected or wherever the caret currently is.  When the "NoteInput.Enter" was 
-// sent above, the caret appeared wherever the current selection was.
+// It's possible to make changes, but you're at the mercy of whatever is currently selected or wherever the caret
+// currently is.  When the "NoteInput.Enter" was sent above, the caret appeared wherever the current selection was.
 
 
 // Let's add some notes:
 
-// NoteInput.Enter is a toggle, so first make sure we're not already in Note Input mode
-// otherwise sending NoteInput.Enter will actually exit Note Input mode. The current state
-// can be determined from the most recent StatusResponse.NoteInputActive value, but it's
-// easier to just send a NoteInput.Exit which always forces NoteInputActive to false;
+// NoteInput.Enter is a toggle, so first make sure we're not already in Note Input mode otherwise sending
+// NoteInput.Enter will actually exit Note Input mode. The current state can be determined from the most recent
+// StatusResponse.NoteInputActive value, but it's easier to just send a NoteInput.Exit which always forces
+// NoteInputActive to false;
 await remote.SendRequestAsync(new Command("NoteInput.Exit"));
 await remote.SendRequestAsync(new Command("NoteInput.Enter"));
 
@@ -196,58 +236,50 @@ await InsertNoteAsync(new("Bb", 4));
 // Exit Note Input mode.
 await remote.SendRequestAsync(new Command("NoteInput.Exit"));
 
-// Break on the next line to allow the selection to be changed in Dorico.
-//System.Diagnostics.Debugger.Break();
-SemaphoreSlim _ss = new(1, 1);
+// Delay to allow the Note insertion to finish so the following code doesn't pollute the Console output with
+// Status updates.  You can comment out the next line to see the messages Dorico sends while operations occur.
+await Task.Delay(2500);
 
+// When the selection changes, Dorico sends three messages: Status, SelectionChanged, Status.
+
+SemaphoreSlim _ss = new(1, 1);
 lea.Subscribe<SelectionChanged>(SelectionChangedHandler);
-lea.Subscribe<StatusResponse>(StatusChangedHandler);
+lea.Subscribe<StatusResponse>(StatusChangedHandler2);
 
 async void SelectionChangedHandler(SelectionChanged evt)
 {
-    // When the selection transitions to something selected to no selection, or vice versa, Dorico sends two
-    // unprompted status responses, one before and one after the selection changed message.  These contain
-    // partial data.  Only the first message will have the hasSelection value present.
-
-    // If a note or rest is selected, check the values of Duration, RhythmDots, and RestMode.
-    // If something else is selected, those properties will not be set.
-
-    //Console.WriteLine($"\n\nHasSelection? {remote.CurrentStatus?.HasSelection}");
-    //Console.WriteLine($"Duration: {remote.CurrentStatus?.Duration}");
-    //Console.WriteLine($"RhythmDots: {remote.CurrentStatus?.RhythmDots}");
-    //Console.WriteLine($"RestMode: {remote.CurrentStatus?.RestMode?.ToString() ?? "null"}");
-
-    await WriteStatus(null);
-}
-
-async void StatusChangedHandler(StatusResponse evt)
-{
-    await WriteStatus(evt);
-}
-
-async Task WriteStatus(StatusResponse? evt)
-{
     await _ss.WaitAsync();
-    if (evt == null)
-    {
-        Console.WriteLine("\n\nSelection Changed");
-    }
-    else
-    {
-        //Console.WriteLine($"\n\n{evt.RawJson}");
-        Console.WriteLine($"HasSelection: {evt.HasSelection}");
-    }
+
+    Console.WriteLine("\nSelection changed.");
+
     _ss.Release();
 }
 
+async void StatusChangedHandler2(StatusResponse evt)
+{
+    // If a note or rest is selected, check the values of Duration, RhythmDots, and RestMode.
+    // If something else is selected, those properties will not be set.
 
-// NOTE! When the selection is changed, Dorico sends a SelectionChanged event and then a partial Status
-// update.  This partial status update does not include the StatusResponse.HasSelection value.  Be aware
-// of this when using the subscribing to the event aggregator for these events.
+    await _ss.WaitAsync();
+
+    Console.WriteLine($"\nStatus changed [{DateTime.Now:h:mm:ss.ffff}]");
+    Console.WriteLine($"HasSelection? {remote.CurrentStatus?.HasSelection}");
+    Console.WriteLine($"Duration: {remote.CurrentStatus?.Duration}");
+    Console.WriteLine($"RhythmDots: {remote.CurrentStatus?.RhythmDots}");
+    Console.WriteLine($"Accidental: {remote.CurrentStatus?.Accidental.ToString()}");
+    Console.WriteLine($"RestMode: {remote.CurrentStatus?.RestMode?.ToString() ?? "null"}");
+
+    _ss.Release();
+}
+
+// In Dorico, change the selection to see the messages Dorico sends.  For readability, this demo writes only the
+// properties that pertain to the selection changing, rather than the entire Status message.
 
 
-
+// This creates the metadata file listing all the commands and options.  The file is not used by Dorico.Net, but used
+// to determine if new items have been exposed by the Remote API. tl/dr: Ignore this method call.
 //CreateMetaFile();
+
 
 Console.Write("\n\nPress any key to exit.");
 Console.ReadKey(true);
@@ -262,14 +294,16 @@ await Task.Delay(1000);
 
 async Task InsertNoteAsync(Note note)
 {
-    // Since Dorico doesn't set the accidental as part of the pitch, the Note class has a helper
-    // that returns the commands required to set the note and advance the caret.
+    // Since Dorico doesn't set the accidental as part of the pitch, the Note class has a helper that returns the
+    // commands required to set the note and advance the caret.
     foreach (var command in note.GetNoteCommands())
     {
         await remote.SendRequestAsync(command);
     }
 }
 
+// This creates the metadata file listing all the commands and options. The file is not used by Dorico.Net, but used
+// to determine if new items have been exposed by the Remote API.
 void CreateMetaFile()
 {
     const string metaFolder = @"Dorico.Net\Meta";
