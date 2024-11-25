@@ -155,6 +155,8 @@ public class DoricoRemoteIntegrationTests
             Assert.That(disconnected, Is.True);
             Assert.That(_remote.IsConnected, Is.False);
         });
+
+        _serviceProvider.Dispose();
     }
 
     [Test, Order(-2)]
