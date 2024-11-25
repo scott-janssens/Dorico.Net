@@ -91,14 +91,14 @@ public class DoricoCommsContextTests
     [Test]
     public void TestStopNotRunning()
     {
-        _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Closed);
+        _mockWebSocket.Setup(ws => ws.AssertSocketOpen()).Throws<InvalidOperationException>();
         Assert.ThrowsAsync<InvalidOperationException>(async () => await _context.StopAsync(CancellationToken.None, -1));
     }
 
     [Test]
     public void SendAsync_WhenNotConnected_ThrowsException()
     {
-        _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Closed);
+        _mockWebSocket.Setup(ws => ws.AssertSocketOpen()).Throws<InvalidOperationException>();
         var request = new Mock<IDoricoRequest>();
 
         Assert.ThrowsAsync<InvalidOperationException>(() => _context.SendAsync(request.Object, It.IsAny<CancellationToken>()));
@@ -329,7 +329,7 @@ public class DoricoCommsContextTests
     }
 
     [Test]
-    public async Task SendAsyncCancelled()
+    public async Task SendAsyncCanceled()
     {
         _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Open);
         _mockWebSocket.Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))

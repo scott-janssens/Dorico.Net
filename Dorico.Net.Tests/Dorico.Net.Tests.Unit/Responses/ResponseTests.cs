@@ -1,4 +1,5 @@
-﻿using DoricoNet.Responses;
+﻿using DoricoNet.Enums;
+using DoricoNet.Responses;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Dorico.Net.Tests.Responses;
@@ -47,7 +48,7 @@ public class ResponseTests
     [Test]
     public void LayoutToString()
     {
-        var response = new Layout(1, "TestName", 1, "");
+        var response = new Layout(1, "TestName", 1, LayoutType.kAll);
         Assert.That(response.ToString(), Is.EqualTo("TestName"));
     }
 

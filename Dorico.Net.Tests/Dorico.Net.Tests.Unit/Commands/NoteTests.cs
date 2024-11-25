@@ -1,4 +1,5 @@
 ﻿using DoricoNet.Commands;
+using DoricoNet.Enums;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Dorico.Net.Tests.Commands;

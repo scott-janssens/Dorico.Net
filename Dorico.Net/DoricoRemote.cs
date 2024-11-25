@@ -20,7 +20,6 @@ namespace DoricoNet;
 public partial class DoricoRemote : IDoricoRemote
 {
     private readonly IDoricoCommsContext _commsContext;
-    private readonly IEventAggregator _eventAggregator;
     private readonly ILogger _logger;
 
     private CommandCollection? _commands;
@@ -53,16 +52,18 @@ public partial class DoricoRemote : IDoricoRemote
     /// <inheritdoc/>
     public int Timeout { get; set; } = 30000;
 
+    /// <inheritdoc/>
+    public StatusResponse? CurrentStatus => _commsContext.CurrentStatus;
+
     /// <summary>
     /// DoricoRemote constructor.
     /// </summary>
     /// <param name="commsContext">A DoricoCommsContext object.</param>
     /// <param name="eventAggregator">An EventAggregator object.</param>
     /// <param name="logger">A logger object</param>
-    public DoricoRemote(IDoricoCommsContext commsContext, IEventAggregator eventAggregator, ILogger logger)
+    public DoricoRemote(IDoricoCommsContext commsContext, ILogger logger)
     {
         _commsContext = commsContext;
-        _eventAggregator = eventAggregator;
         _logger = logger;
     }
 

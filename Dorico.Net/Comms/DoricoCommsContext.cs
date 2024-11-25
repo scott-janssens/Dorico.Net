@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DoricoNet.Attributes;
 using DoricoNet.Exceptions;
+using DoricoNet.Json;
 using DoricoNet.Requests;
 using DoricoNet.Responses;
 using Lea;
@@ -12,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace DoricoNet.Comms;
 
@@ -28,12 +30,14 @@ namespace DoricoNet.Comms;
 /// </summary>
 public partial class DoricoCommsContext : IDoricoCommsContext
 {
+    private static readonly object statusLock = new();
     private readonly IEventAggregator _eventAggregator;
     private readonly ConcurrentQueue<RequestInfo> _responseQueue = new();
     private readonly Dictionary<string, Type> _responseTypeMap;
     private readonly ILogger _logger;
     private readonly IClientWebSocketWrapper _webSocket;
-    private readonly JsonSerializerOptions _jsonSerializationOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly JsonSerializerOptions _jsonSerializationOptions = new() { PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
+    private string _lastStatusContent;
 
     #region LoggerMessages
 
@@ -53,7 +57,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     partial void LogUnknownResponseError(string content);
 
     [LoggerMessage(LogLevel.Information, "Request '{RequestType}' canceled.")]
-    partial void LogRequestCancelled(string requestType);
+    partial void LogRequestCanceled(string requestType);
 
     [LoggerMessage(LogLevel.Information, "Request '{RequestType}' timed out.")]
     partial void LogRequestTimedOut(string requestType);
@@ -72,10 +76,30 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     /// <inheritdoc/>
     public bool IsRunning { get; private set; }
 
+    private StatusResponse? _currentStatus;
+    /// <inheritdoc/>
+    public StatusResponse? CurrentStatus
+    {
+        get
+        {
+            lock (statusLock)
+            {
+                return _currentStatus;
+            }
+        }
+        private set
+        {
+            lock (statusLock)
+            {
+                _currentStatus = value;
+            }
+        }
+    }
+
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="doricoWebSocket">Dorico specific websocket object</param>
+    /// <param name="doricoWebSocket">Dorico specific WebSocket object</param>
     /// <param name="eventAggregator">Event aggregator instance</param>
     public DoricoCommsContext(IClientWebSocketWrapper socket, IEventAggregator eventAggregator, ILogger logger)
     {
@@ -83,6 +107,8 @@ public partial class DoricoCommsContext : IDoricoCommsContext
         _eventAggregator = eventAggregator;
         _logger = logger;
         _responseTypeMap = BuildResponseTypeMap();
+
+        _lastStatusContent = JsonSerializer.Serialize(StatusResponse.Create());
     }
 
     /// <inheritdoc/>
@@ -160,10 +186,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     /// <inheritdoc/>
     public async Task StopAsync(CancellationToken cancellationToken, int timeout = -1)
     {
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException($"WebSocket connection is not open: {State}.");
-        }
+        _webSocket.AssertSocketOpen();
 
         var request = new DisconnectRequest();
         await SendAsync(request, cancellationToken, timeout).ConfigureAwait(false);
@@ -175,14 +198,10 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     }
 
     /// <inheritdoc/>
-    public async Task<IDoricoResponse?> SendAsync(IDoricoRequest request, CancellationToken cancellationToken, int timeout = -1)
+    public async Task<IDoricoResponse?> SendAsync(IDoricoRequest request, CancellationToken cancellationToken, int timeout = 30000)
     {
         Guard.IsNotNull(request, nameof(request));
-
-        if (State != WebSocketState.Open)
-        {
-            ThrowHelper.ThrowInvalidOperationException($"WebSocket connection is not open: {State}.");
-        }
+        _webSocket.AssertSocketOpen();
 
         var sendBytes = Encoding.UTF8.GetBytes(request.Message);
         var sendBuffer = new ArraySegment<byte>(sendBytes);
@@ -211,9 +230,9 @@ public partial class DoricoCommsContext : IDoricoCommsContext
                     LogRequestTimedOut(requestInfo.GetType().Name);
                     break;
                 case 1:
-                    requestInfo.IsCancelled = true;
+                    requestInfo.IsCanceled = true;
                     ((DoricoRequestBase)request).Abort();
-                    LogRequestCancelled(requestInfo.GetType().Name);
+                    LogRequestCanceled(requestInfo.GetType().Name);
                     break;
                 default:
                     break;
@@ -221,9 +240,9 @@ public partial class DoricoCommsContext : IDoricoCommsContext
         }
         catch (TaskCanceledException)
         {
-            requestInfo.IsCancelled = true;
+            requestInfo.IsCanceled = true;
             ((DoricoRequestBase)request).Abort();
-            LogRequestCancelled(requestInfo.GetType().Name);
+            LogRequestCanceled(requestInfo.GetType().Name);
         }
         catch
         {
@@ -242,9 +261,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     {
         var response = (DoricoResponseBase)evt;
 
-        _responseQueue.TryPeek(out var requestInfo);
-
-        if (requestInfo != null)
+        if (_responseQueue.TryPeek(out var requestInfo))
         {
             if (requestInfo.IsAborted)
             {
@@ -268,6 +285,11 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
         if (response is DoricoUnpromptedResponseBase)
         {
+            if (response is StatusResponse status)
+            {
+                CurrentStatus = status;
+            }
+
             _eventAggregator.Publish(evt);
         }
     }
@@ -305,7 +327,25 @@ public partial class DoricoCommsContext : IDoricoCommsContext
             return;
         }
 
-        var responseObj = (DoricoResponseBase?)JsonSerializer.Deserialize(
+        DoricoResponseBase? responseObj = null;
+
+        if (content.Contains("\"message\": \"status\"", StringComparison.Ordinal))
+        {
+            if (!_responseQueue.TryPeek(out var requestInfo) || requestInfo!.Request.ResponseType != typeof(StatusResponse))
+            {
+                // non requested status response are likely to be partial payloads.
+                // Apply these as a patch to the current status.
+
+                _lastStatusContent = JsonUtils.Merge(_lastStatusContent, content, true);
+                responseObj = JsonSerializer.Deserialize<StatusResponse>(_lastStatusContent, _jsonSerializationOptions);
+            }
+            else
+            {
+                _lastStatusContent = content;
+            }
+        }
+
+        responseObj ??= (DoricoResponseBase?)JsonSerializer.Deserialize(
             content,
             responseType,
             _jsonSerializationOptions);
@@ -343,10 +383,10 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
     private record RequestInfo(IDoricoRequest Request, ManualResetEvent ResetEvent)
     {
-        public bool IsCancelled { get; set; }
+        public bool IsCanceled { get; set; }
 
         public bool IsTimedOut { get; set; }
 
-        public bool IsAborted => IsCancelled || IsTimedOut;
+        public bool IsAborted => IsCanceled || IsTimedOut;
     }
 }

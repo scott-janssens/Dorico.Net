@@ -50,7 +50,7 @@ public class LibraryEntityCollection : ICollection<LibraryEntity>
     }
 
     /// <inheritdoc/>
-    public void Clear() => ThrowHelper.ThrowNotSupportedException();
+    public void Clear() => throw new NotSupportedException();
 
     /// <inheritdoc/>
     public bool Contains(LibraryEntity item)
@@ -60,13 +60,12 @@ public class LibraryEntityCollection : ICollection<LibraryEntity>
     }
 
     /// <inheritdoc/>
-    public void CopyTo(LibraryEntity[] array, int arrayIndex) => ThrowHelper.ThrowNotSupportedException();
+    public void CopyTo(LibraryEntity[] array, int arrayIndex) => throw new NotSupportedException();
 
     /// <inheritdoc/>
     public bool Remove(LibraryEntity item)
     {
-        ThrowHelper.ThrowNotSupportedException();
-        return false;
+        throw new NotSupportedException();
     }
 
     /// <inheritdoc/>

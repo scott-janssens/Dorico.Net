@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using DoricoNet.Enums;
 
 namespace DoricoNet.Commands;
 
@@ -11,7 +12,6 @@ public record Note
     private static readonly string[] _pitchesFlat = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
     private readonly bool _internalUseSharps;
-    private readonly string? _accidentalType;
 
     /// <summary>
     /// Globally sets default use of sharps (true) or flats (false). Notes created in opposition
@@ -33,7 +33,20 @@ public record Note
     /// <summary>
     /// Accidental, if any, of the note.
     /// </summary>
-    public string Accidental { get; }
+    public Accidental? AccidentalType { get; }
+
+    public string Accidental => AccidentalType switch
+    {
+        Enums.Accidental.None => "",
+        Enums.Accidental.kNatural => "",
+        Enums.Accidental.kSharp => "#",
+        Enums.Accidental.kDoubleSharp => "x",
+        Enums.Accidental.kTripleSharp => "#x",
+        Enums.Accidental.kFlat => "b",
+        Enums.Accidental.kDoubleFlat => "bb",
+        Enums.Accidental.kTripleFlat => "bbb",
+        _ => string.Empty
+    };
 
     /// <summary>
     /// The octave of the note.
@@ -73,12 +86,12 @@ public record Note
         if (_internalUseSharps)
         {
             Pitch = _pitchesSharp[pitchIndex][0];
-            Accidental = _pitchesSharp[pitchIndex][1..];
+            AccidentalType = GetAccidentalType(_pitchesSharp[pitchIndex][1..]);
         }
         else
         {
             Pitch = _pitchesFlat[pitchIndex][0];
-            Accidental = _pitchesFlat[pitchIndex][1..];
+            AccidentalType = GetAccidentalType(_pitchesFlat[pitchIndex][1..]);
         }
 
         CalculateMidiRelatedValues();
@@ -100,13 +113,13 @@ public record Note
         Guard.IsInRange(Pitch, 'A', 'H');
         Guard.IsInRange(octave, -1, 10, nameof(octave));
 
-        Accidental = pitch[1..]?.ToLowerInvariant() ?? string.Empty;
+        var accidental = pitch[1..]?.ToLowerInvariant() ?? string.Empty;
         Octave = octave;
-        _internalUseSharps = Accidental != "b" && UseSharps;
+        _internalUseSharps = (accidental.Length == 0 || accidental[0] != 'b') && UseSharps;
+        AccidentalType = GetAccidentalType(accidental);
 
         Midi = octave * 12 + 12 + (_internalUseSharps ? Array.FindIndex(_pitchesSharp, PitchMatch) : Array.FindIndex(_pitchesFlat, PitchMatch));
 
-        _accidentalType = GetAccidentalType(Accidental);
         CalculateMidiRelatedValues();
     }
 
@@ -119,9 +132,9 @@ public record Note
     {
         var result = new List<Command>();
 
-        if (!string.IsNullOrEmpty(_accidentalType))
+        if (AccidentalType != null && AccidentalType != Enums.Accidental.None)
         {
-            result.Add(new("NoteInput.SetAccidental", new CommandParameter("Type", _accidentalType)));
+            result.Add(new("NoteInput.SetAccidental", new CommandParameter("Type", AccidentalType.ToString()!)));
         }
 
         result.Add(new("NoteInput.Pitch", new CommandParameter("Pitch", Pitch.ToString()), new CommandParameter("OctaveValue", Octave.ToString())));
@@ -194,29 +207,29 @@ public record Note
 
     #region Private Methods
 
-    private static string? GetAccidentalType(string accidental)
+    private static Accidental? GetAccidentalType(string accidental)
     {
         switch (accidental)
         {
+            case "":
+                return Enums.Accidental.None;
             case "0":
-                return "kNatural";
+                return Enums.Accidental.kNatural;
             case "#":
-                return "kSharp";
+                return Enums.Accidental.kSharp;
             case "x":
-                return "kDoubleSharp";
+                return Enums.Accidental.kDoubleSharp;
             case "#x":
-                return "kTripleSharp";
+                return Enums.Accidental.kTripleSharp;
             case "b":
-                return "kFlat";
+                return Enums.Accidental.kFlat;
             case "bb":
-                return "kDoubleFlat";
+                return Enums.Accidental.kDoubleFlat;
             case "bbb":
-                return "kTripleFlat";
+                return Enums.Accidental.kTripleFlat;
             default:
-                break;
+                throw new ArgumentException("Invalid value for accidental", nameof(accidental));
         }
-
-        return null;
     }
 
     private void CalculateMidiRelatedValues()
@@ -229,6 +242,7 @@ public record Note
 
         Frequency = Math.Round(440 * Math.Pow(2.0, (Midi - 69) / 12.0), 2);
     }
+
     private bool PitchMatch(string pitch)
     {
         return pitch == $"{Pitch}{Accidental}";

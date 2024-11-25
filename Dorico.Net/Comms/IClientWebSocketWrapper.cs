@@ -45,4 +45,9 @@ public interface IClientWebSocketWrapper
     /// <param name="endOfMessage">True if the buffer contains the end of the message, or false if the request is broken up.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Checks if the WebSocket is in an open state and throws an exception if it is not.
+    /// </summary>
+    void AssertSocketOpen();
 }
