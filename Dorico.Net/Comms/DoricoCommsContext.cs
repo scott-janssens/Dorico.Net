@@ -68,7 +68,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     public WebSocketState State => _webSocket.State;
 
     /// <inheritdoc/>
-    public Collection<string> HideMessageTypes { get; } = new Collection<string>();
+    public Collection<string> HideMessageTypes { get; } = [];
 
     /// <inheritdoc/>
     public bool Echo { get; set; } = true;
@@ -220,7 +220,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
                 LogMessageSent(request.GetType(), request.Message);
             }
 
-            var waitResult = WaitHandle.WaitAny(new[] { resetEvent, cancellationToken.WaitHandle }, timeout);
+            var waitResult = WaitHandle.WaitAny([resetEvent, cancellationToken.WaitHandle], timeout);
 
             switch (waitResult)
             {

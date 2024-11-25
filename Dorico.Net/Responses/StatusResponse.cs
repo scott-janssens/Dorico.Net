@@ -9,7 +9,7 @@ namespace DoricoNet.Responses;
 [ResponseMessage("status")]
 public record StatusResponse : DoricoUnpromptedResponseBase
 {
-    internal static StatusResponse Create() => new StatusResponse { Message = "status" };
+    internal static StatusResponse Create() => new() { Message = "status" };
 
     /// <summary>
     /// The ID of the active score

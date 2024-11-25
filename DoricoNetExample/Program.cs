@@ -175,12 +175,12 @@ if (layoutsResponse != null)
     // Modify a layout option of a specific layout. Multiple options can be set at once on multiple layouts,
     // but we'll just do one of each here.
     await remote.SetLayoutOptionsAsync(
-        new[] { new OptionValue("transpositionType", "kTransposingScore") },
-        new[] { layoutId });
+        [new OptionValue("transpositionType", "kTransposingScore")],
+        [layoutId]);
 
     // There are also enums to help specify which layouts to affect
     await remote.SetLayoutOptionsAsync(
-        new[] { new OptionValue("transpositionType", "kScoreInC") },
+        [new OptionValue("transpositionType", "kScoreInC")],
         LayoutIds.kAll);
 }
 
@@ -312,6 +312,7 @@ void CreateMetaFile()
     var metaFile = Path.Combine(metaDir, metaFolder, "MetaData.json");
     using var commadnsStream = new FileStream(metaFile, FileMode.Create);
     using var streamWriter = new StreamWriter(commadnsStream);
+#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
     streamWriter.Write(JsonSerializer.Serialize(new MetaDataObject
     {
         Version = versionResponse?.ToString(),
@@ -321,6 +322,7 @@ void CreateMetaFile()
         LayoutOptions = layoutOptions
     },
     new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
+#pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 }
 
 class MetaDataObject
