@@ -12,7 +12,7 @@ using Moq;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.Integration_Tests;
+namespace Dorico.Net.Tests.Integration;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]

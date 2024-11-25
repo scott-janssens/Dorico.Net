@@ -243,10 +243,10 @@ await Task.Delay(2500);
 // When the selection changes, Dorico sends three messages: Status, SelectionChanged, Status.
 
 SemaphoreSlim _ss = new(1, 1);
-lea.Subscribe<SelectionChanged>(SelectionChangedHandler);
+lea.Subscribe<SelectionChangedResponse>(SelectionChangedHandler);
 lea.Subscribe<StatusResponse>(StatusChangedHandler2);
 
-async void SelectionChangedHandler(SelectionChanged evt)
+async void SelectionChangedHandler(SelectionChangedResponse evt)
 {
     await _ss.WaitAsync();
 

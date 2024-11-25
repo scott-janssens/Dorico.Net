@@ -9,4 +9,4 @@ namespace DoricoNet.Responses;
 /// <param name="OpenScoreId">The ID of the score to which the changed collections belong</param>
 /// <param name="Collections">The list of collections which have changed</param>
 [ResponseMessage("librarychanged")]
-public record LibraryChanged(int OpenScoreId, IEnumerable<string> Collections) : DoricoUnpromptedResponseBase;
+public record LibraryChangedResponse(int OpenScoreId, IEnumerable<string> Collections) : DoricoUnpromptedResponseBase;
