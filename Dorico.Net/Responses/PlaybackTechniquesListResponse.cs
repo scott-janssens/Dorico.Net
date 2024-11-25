@@ -10,4 +10,7 @@ namespace DoricoNet.Responses;
 /// <param name="ExpressionMaps">The expression maps associated with the endpoint, if any</param>
 /// <param name="DrumKitNoteMaps">DrumKitNoteMap</param>
 [ResponseMessage("playbacktechniqueslist")]
-public record PlaybackTechniquesListResponse(int OpenScoreID, IEnumerable<ExpressionMap> ExpressionMaps, IEnumerable<DrumKitNoteMap> DrumKitNoteMaps) : DoricoResponseBase;
+public record PlaybackTechniquesListResponse(
+    int OpenScoreID,
+    IEnumerable<ExpressionMap> ExpressionMaps,
+    IEnumerable<DrumKitNoteMap> DrumKitNoteMaps) : DoricoResponseBase;

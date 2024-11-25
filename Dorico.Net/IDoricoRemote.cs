@@ -22,7 +22,8 @@ public interface IDoricoRemote
     bool IsConnected { get; }
 
     /// <summary>
-    /// Session token previously provided by Dorico. If valid Dorico will accept this connection without prompting the user.
+    /// Session token previously provided by Dorico. If valid Dorico will accept this connection without prompting
+    /// the user.
     /// </summary>
     string? SessionToken { get; }
 
@@ -114,7 +115,9 @@ public interface IDoricoRemote
     /// <param name="collection">The collection to query.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     /// <returns>A LibraryEntityCollection object.</returns>
-    Task<LibraryEntityCollection?> GetLibraryEntitiesAsync(string collection, CancellationToken? cancellationToken = null);
+    Task<LibraryEntityCollection?> GetLibraryEntitiesAsync(
+        string collection,
+        CancellationToken? cancellationToken = null);
 
     /// <summary>
     /// Retrieves the notation options for the specified flow.
@@ -153,7 +156,10 @@ public interface IDoricoRemote
     /// <param name="layoutIds">A collection of layout IDs to affect.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     /// <returns></returns>
-    Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, IEnumerable<int>? layoutIds = null, CancellationToken? cancellationToken = null);
+    Task<Response?> SetLayoutOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        IEnumerable<int>? layoutIds = null,
+        CancellationToken? cancellationToken = null);
 
     /// <summary>
     /// Set the specified layout option values for the layouts which satisfy the LayoutIds enum value.
@@ -162,7 +168,10 @@ public interface IDoricoRemote
     /// <param name="layoutIds">A LayoutIDs enum value.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     /// <returns></returns>
-    Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, LayoutIds layoutIds, CancellationToken? cancellationToken = null);
+    Task<Response?> SetLayoutOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        LayoutId layoutIds,
+        CancellationToken? cancellationToken = null);
 
     /// <summary>
     /// Set the specified notation option values for the flows whose IDs are in the layoutIds collection.
@@ -171,7 +180,10 @@ public interface IDoricoRemote
     /// <param name="flowIds">A collection of flow IDs to affect.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     /// <returns>A Response object.</returns>
-    Task<Response?> SetNotationOptionsAsync(IEnumerable<OptionValue> optionValues, IEnumerable<int>? flowIds = null, CancellationToken? cancellationToken = null);
+    Task<Response?> SetNotationOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        IEnumerable<int>? flowIds = null,
+        CancellationToken? cancellationToken = null);
 
     /// <summary>
     /// Set the specified notation option values for the flows which satisfy the FlowIds enum value.
@@ -180,7 +192,10 @@ public interface IDoricoRemote
     /// <param name="flowIds">A FlowId enum value.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     /// <returns>A Response object.</returns>
-    Task<Response?> SetNotationOptionsAsync(IEnumerable<OptionValue> optionValues, FlowIds flowIds, CancellationToken? cancellationToken = null);
+    Task<Response?> SetNotationOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        FlowId flowIds,
+        CancellationToken? cancellationToken = null);
 
     /// <summary>
     /// Set the specified engraving option values.
@@ -188,7 +203,9 @@ public interface IDoricoRemote
     /// <param name="optionValues">A collection of OptionValue objects.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
     /// <returns>A Response object.</returns>
-    Task<Response?> SetEngravingOptionsAsync(IEnumerable<OptionValue> optionValues, CancellationToken? cancellationToken = null);
+    Task<Response?> SetEngravingOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        CancellationToken? cancellationToken = null);
 
     /// <summary>
     /// Sends a request to Dorico.

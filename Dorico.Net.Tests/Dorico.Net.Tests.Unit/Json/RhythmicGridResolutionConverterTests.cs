@@ -1,5 +1,4 @@
 ﻿using DoricoNet.Enums;
-using DoricoNet.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
@@ -9,13 +8,11 @@ namespace Dorico.Net.Tests.Unit.Json;
 [TestFixture]
 internal class RhythmicGridResolutionConverterTests
 {
-    private RhythmicGridResolutionConverter _converter;
+    private readonly JsonSerializerOptions _optionsInsensitive = new() { PropertyNameCaseInsensitive = true };
 
-    [SetUp]
-    public void Setup()
-    {
-        _converter = new();
-    }
+    private readonly JsonSerializerOptions _optionsCamel =
+        new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
 
     [Test]
     public void RhythmicGridResolutionConverter_Read()
@@ -23,7 +20,7 @@ internal class RhythmicGridResolutionConverterTests
         var value = (Test?)JsonSerializer.Deserialize(
             "{\"resolution\": \"kCrotchet\"}",
             typeof(Test),
-            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            _optionsInsensitive);
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Resolution, Is.EqualTo(RhythmicGridResolution.kCrotchet));
@@ -35,7 +32,7 @@ internal class RhythmicGridResolutionConverterTests
         var value = (Test?)JsonSerializer.Deserialize(
             "{\"resolution\": null}",
             typeof(Test),
-            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            _optionsInsensitive);
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Resolution, Is.Null);
@@ -47,7 +44,7 @@ internal class RhythmicGridResolutionConverterTests
         var value = (Test?)JsonSerializer.Deserialize(
             "{\"resolution\": \"\"}",
             typeof(Test),
-            new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            _optionsInsensitive);
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Resolution, Is.EqualTo(RhythmicGridResolution.Undefined));
@@ -59,7 +56,7 @@ internal class RhythmicGridResolutionConverterTests
         var value = JsonSerializer.Serialize(
             new Test { Resolution = RhythmicGridResolution.Quarter },
             typeof(Test),
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            _optionsCamel);
 
         Assert.That(value, Is.EqualTo("{\"resolution\":\"kCrotchet\"}"));
     }
@@ -70,7 +67,7 @@ internal class RhythmicGridResolutionConverterTests
         var value = JsonSerializer.Serialize(
             new Test { Resolution = null },
             typeof(Test),
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            _optionsCamel);
 
         Assert.That(value, Is.EqualTo("{\"resolution\":null}"));
     }
@@ -81,7 +78,7 @@ internal class RhythmicGridResolutionConverterTests
         var value = JsonSerializer.Serialize(
             new Test { Resolution = RhythmicGridResolution.Undefined },
             typeof(Test),
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            _optionsCamel);
 
         Assert.That(value, Is.EqualTo("{\"resolution\":\"Undefined\"}"));
     }

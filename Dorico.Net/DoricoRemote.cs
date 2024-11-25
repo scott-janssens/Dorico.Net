@@ -5,7 +5,6 @@ using DoricoNet.Enums;
 using DoricoNet.Exceptions;
 using DoricoNet.Requests;
 using DoricoNet.Responses;
-using Lea;
 using Microsoft.Extensions.Logging;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
@@ -17,11 +16,14 @@ namespace DoricoNet;
 /// of the Dorico remote API.  Specific functionality, such as executing particular commands
 /// or a series of commands, is expected to be implemented in inheriting classes.
 /// </summary>
-public partial class DoricoRemote : IDoricoRemote
+/// <remarks>
+/// DoricoRemote constructor.
+/// </remarks>
+/// <param name="commsContext">A DoricoCommsContext object.</param>
+/// <param name="eventAggregator">An EventAggregator object.</param>
+/// <param name="logger">A logger object</param>
+public partial class DoricoRemote(IDoricoCommsContext commsContext, ILogger logger) : IDoricoRemote
 {
-    private readonly IDoricoCommsContext _commsContext;
-    private readonly ILogger _logger;
-
     private CommandCollection? _commands;
 
     #region LoggerMessages
@@ -44,7 +46,7 @@ public partial class DoricoRemote : IDoricoRemote
     public string? ClientName { get; protected set; }
 
     /// <inheritdoc/>
-    public bool IsConnected => _commsContext.State == WebSocketState.Open;
+    public bool IsConnected => commsContext.State == WebSocketState.Open;
 
     /// <inheritdoc/>
     public string? SessionToken { get; protected set; }
@@ -53,19 +55,7 @@ public partial class DoricoRemote : IDoricoRemote
     public int Timeout { get; set; } = 30000;
 
     /// <inheritdoc/>
-    public StatusResponse? CurrentStatus => _commsContext.CurrentStatus;
-
-    /// <summary>
-    /// DoricoRemote constructor.
-    /// </summary>
-    /// <param name="commsContext">A DoricoCommsContext object.</param>
-    /// <param name="eventAggregator">An EventAggregator object.</param>
-    /// <param name="logger">A logger object</param>
-    public DoricoRemote(IDoricoCommsContext commsContext, ILogger logger)
-    {
-        _commsContext = commsContext;
-        _logger = logger;
-    }
+    public StatusResponse? CurrentStatus => commsContext.CurrentStatus;
 
     /// <inheritdoc/>
     public virtual async Task<bool> ConnectAsync(string clientName, IConnectionArguments connectionArguments)
@@ -79,21 +69,22 @@ public partial class DoricoRemote : IDoricoRemote
         {
             try
             {
-                if (_commsContext.State != WebSocketState.Open)
+                if (commsContext.State != WebSocketState.Open)
                 {
-                    await _commsContext.ConnectAsync(connectionArguments).ConfigureAwait(false);
+                    await commsContext.ConnectAsync(connectionArguments).ConfigureAwait(false);
                 }
 
-                if (_commsContext.State != WebSocketState.Open)
+                if (commsContext.State != WebSocketState.Open)
                 {
-                    LogConnectionError(_logger);
+                    LogConnectionError(logger);
                     throw new DoricoException("Could not connect to Dorico. Make sure Dorico is running.");
                 }
                 else
                 {
                     if (connectionArguments.SessionToken == null)
                     {
-                        SessionToken = await ConnectWithoutSessionTokenAsync(connectionArguments).ConfigureAwait(false);
+                        SessionToken = 
+                            await ConnectWithoutSessionTokenAsync(connectionArguments).ConfigureAwait(false);
                     }
                     else
                     {
@@ -114,7 +105,7 @@ public partial class DoricoRemote : IDoricoRemote
 
         if (IsConnected)
         {
-            LogConnection(_logger);
+            LogConnection(logger);
         }
 
         return IsConnected;
@@ -125,11 +116,11 @@ public partial class DoricoRemote : IDoricoRemote
     {
         AssertConnected();
 
-        await _commsContext.StopAsync(cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        await commsContext.StopAsync(cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
 
         if (!IsConnected)
         {
-            LogDisconnect(_logger);
+            LogDisconnect(logger);
         }
 
         return !IsConnected;
@@ -141,7 +132,8 @@ public partial class DoricoRemote : IDoricoRemote
         AssertConnected();
 
         var request = new GetAppInfoRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -156,7 +148,8 @@ public partial class DoricoRemote : IDoricoRemote
             AssertConnected();
 
             var request = new GetCommandsRequest();
-            var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+            var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+                .ConfigureAwait(false);
 
             ErrorCheck(request, response);
 
@@ -183,7 +176,8 @@ public partial class DoricoRemote : IDoricoRemote
         AssertConnected();
 
         var request = new GetOptionsRequest(OptionsType.kEngraving);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -191,12 +185,15 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public async Task<OptionCollection?> GetLayoutOptionsAsync(int layoutID, CancellationToken? cancellationToken = null)
+    public async Task<OptionCollection?> GetLayoutOptionsAsync(
+        int layoutID,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new GetOptionsRequest(OptionsType.kLayout, layoutID);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -204,12 +201,15 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public async Task<OptionCollection?> GetNotationOptionsAsync(int flowID, CancellationToken? cancellationToken = null)
+    public async Task<OptionCollection?> GetNotationOptionsAsync(
+        int flowID,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new GetOptionsRequest(OptionsType.kNotation, flowID);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -217,12 +217,16 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, IEnumerable<int>? layoutIds = null, CancellationToken? cancellationToken = null)
+    public virtual async Task<Response?> SetLayoutOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        IEnumerable<int>? layoutIds = null,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new SetLayoutOptionsRequest(optionValues, layoutIds);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -230,12 +234,16 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<Response?> SetLayoutOptionsAsync(IEnumerable<OptionValue> optionValues, LayoutIds layoutIds, CancellationToken? cancellationToken = null)
+    public virtual async Task<Response?> SetLayoutOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        LayoutId layoutIds,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new SetLayoutOptionsRequest(optionValues, layoutIds);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -243,12 +251,16 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<Response?> SetNotationOptionsAsync(IEnumerable<OptionValue> optionValues, IEnumerable<int>? flowIds = null, CancellationToken? cancellationToken = null)
+    public virtual async Task<Response?> SetNotationOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        IEnumerable<int>? flowIds = null,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new SetNotationOptionsRequest(optionValues, flowIds);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -256,12 +268,16 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<Response?> SetNotationOptionsAsync(IEnumerable<OptionValue> optionValues, FlowIds flowIds, CancellationToken? cancellationToken = null)
+    public virtual async Task<Response?> SetNotationOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        FlowId flowIds,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new SetNotationOptionsRequest(optionValues, flowIds);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -269,12 +285,15 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<Response?> SetEngravingOptionsAsync(IEnumerable<OptionValue> optionValues, CancellationToken? cancellationToken = null)
+    public virtual async Task<Response?> SetEngravingOptionsAsync(
+        IEnumerable<OptionValue> optionValues,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new SetEngravingOptionsRequest(optionValues);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -287,7 +306,8 @@ public partial class DoricoRemote : IDoricoRemote
         AssertConnected();
 
         var request = new GetFlowsRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -300,7 +320,8 @@ public partial class DoricoRemote : IDoricoRemote
         AssertConnected();
 
         var request = new GetLayoutsRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -308,12 +329,14 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<LibraryCollectionsListResponse?> GetLibraryCollectionsAsync(CancellationToken? cancellationToken = null)
+    public virtual async Task<LibraryCollectionsListResponse?> GetLibraryCollectionsAsync(
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new GetLibraryCollectionsRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -321,12 +344,15 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<LibraryEntityCollection?> GetLibraryEntitiesAsync(string collection, CancellationToken? cancellationToken = null)
+    public virtual async Task<LibraryEntityCollection?> GetLibraryEntitiesAsync(
+        string collection,
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new GetLibraryEntriesRequest(collection);
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -334,12 +360,14 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<PlaybackTechniquesListResponse?> GetPlaybackTechniquesAsync(CancellationToken? cancellationToken = null)
+    public virtual async Task<PlaybackTechniquesListResponse?> GetPlaybackTechniquesAsync(
+        CancellationToken? cancellationToken = null)
     {
         AssertConnected();
 
         var request = new GetPlaybackTechniquesRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -352,7 +380,8 @@ public partial class DoricoRemote : IDoricoRemote
         AssertConnected();
 
         var request = new GetPropertiesRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -365,7 +394,8 @@ public partial class DoricoRemote : IDoricoRemote
         AssertConnected();
 
         var request = new GetStatusRequest();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -373,12 +403,15 @@ public partial class DoricoRemote : IDoricoRemote
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IDoricoResponse?> SendRequestAsync(IDoricoRequest request, CancellationToken? cancellationToken = null)
+    public virtual async Task<IDoricoResponse?> SendRequestAsync(
+        IDoricoRequest request,
+        CancellationToken? cancellationToken = null)
     {
         Guard.IsNotNull(request);
 
         AssertConnected();
-        var response = await _commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(request, cancellationToken ?? CancellationToken.None, Timeout)
+            .ConfigureAwait(false);
 
         ErrorCheck(request, response);
 
@@ -398,15 +431,18 @@ public partial class DoricoRemote : IDoricoRemote
     {
         var connectRequest = new ConnectRequest(ClientName!, connectionArguments.HandshakeVersion);
 
-        await _commsContext.SendAsync(connectRequest, connectionArguments.CancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        await commsContext.SendAsync(connectRequest,
+            connectionArguments.CancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
 
-        if (connectRequest.TypedResponse == null || string.IsNullOrWhiteSpace(connectRequest.TypedResponse.SessionToken))
+        if (connectRequest.TypedResponse == null ||
+            string.IsNullOrWhiteSpace(connectRequest.TypedResponse.SessionToken))
         {
             throw new InvalidOperationException("No sessionToken returned");
         }
 
         var acceptSessionTokenRequest = new AcceptSessionTokenRequest(connectRequest.TypedResponse.SessionToken);
-        var response = await _commsContext.SendAsync(acceptSessionTokenRequest, connectionArguments.CancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(acceptSessionTokenRequest,
+            connectionArguments.CancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
 
         ErrorCheck(acceptSessionTokenRequest, response);
 
@@ -419,13 +455,15 @@ public partial class DoricoRemote : IDoricoRemote
 
         var connectRequest = new ConnectWithSessionRequest(ClientName!, connectionArguments.SessionToken, connectionArguments.HandshakeVersion);
 
-        var response = await _commsContext.SendAsync(connectRequest, connectionArguments.CancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
+        var response = await commsContext.SendAsync(connectRequest,
+            connectionArguments.CancellationToken ?? CancellationToken.None, Timeout).ConfigureAwait(false);
 
         ErrorCheck(connectRequest, response);
 
         if (connectRequest.TypedResponse == null || connectRequest.TypedResponse.Code != "kConnected")
         {
-            throw new InvalidOperationException($"Unable to connect with sessionToken {connectionArguments.SessionToken}");
+            throw new InvalidOperationException(
+                $"Unable to connect with sessionToken {connectionArguments.SessionToken}");
         }
     }
 

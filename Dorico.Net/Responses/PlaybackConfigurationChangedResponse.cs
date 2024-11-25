@@ -3,4 +3,4 @@
 namespace DoricoNet.Responses;
 
 [ResponseMessage("playbackconfigurationchanged")]
-public record PlaybackConfigurationChanged(int OpenScoreId) : DoricoUnpromptedResponseBase;
+public record PlaybackConfigurationChangedResponse(int OpenScoreId) : DoricoUnpromptedResponseBase;

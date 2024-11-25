@@ -12,7 +12,8 @@ public record GetOptionsRequest : DoricoRequestBase<OptionsListResponse>
     private readonly string _idString;
 
     /// <inheritdoc/>
-    public override string Message => $"{{\"message\": \"getoptions\", \"optionsType\": \"{OptionsType}\"{_idString}}}";
+    public override string Message =>
+        $"{{\"message\": \"getoptions\", \"optionsType\": \"{OptionsType}\"{_idString}}}";
 
     /// <inheritdoc/>
     public override string MessageId => "getoptions";
@@ -26,7 +27,8 @@ public record GetOptionsRequest : DoricoRequestBase<OptionsListResponse>
     /// GetOptionsRequest constructor.
     /// </summary>
     /// <param name="optionsType">The type of options to request.</param>
-    /// <param name="id">A layout ID for OptionType.kLayout, a flow ID for OptionType.kNotation, otherwise null.</param>
+    /// <param name="id">A layout ID for OptionType.kLayout, a flow ID for OptionType.kNotation,
+    /// otherwise null.</param>
     public GetOptionsRequest(OptionsType optionsType, int? id = null)
     {
         OptionsType = optionsType;

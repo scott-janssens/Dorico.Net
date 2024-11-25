@@ -1,20 +1,15 @@
 ﻿using DoricoNet.DataStructures;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.DataStructures;
+namespace Dorico.Net.Tests.Unit.DataStructures;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
 public class OrganizedTreeListNodeTests
 {
-    private class TestOrganizable : IOrganizable
+    private class TestOrganizable(string name) : IOrganizable
     {
-        public Func<string> GetNameValue { get; }
-
-        public TestOrganizable(string name)
-        {
-            GetNameValue = () => name;
-        }
+        public Func<string> GetNameValue { get; } = () => name;
     }
 
     [Test]

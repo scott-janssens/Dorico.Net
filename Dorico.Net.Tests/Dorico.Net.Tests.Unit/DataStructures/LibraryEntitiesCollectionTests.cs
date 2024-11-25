@@ -2,7 +2,7 @@
 using DoricoNet.Responses;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.DataStructures;
+namespace Dorico.Net.Tests.Unit.DataStructures;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -14,7 +14,7 @@ public class LibraryEntitiesCollectionTests
     [SetUp]
     public void SetUp()
     {
-        _collection = new LibraryEntityCollection();
+        _collection = [];
         _entity = new LibraryEntity("1", "One", null);
     }
 

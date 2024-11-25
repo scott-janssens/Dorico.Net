@@ -7,34 +7,29 @@ namespace DoricoNet.DataStructures;
 /// Class implementation of a tree node in an organized list
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class OrganizedTreeListNode<T>
+/// <remarks>
+/// OrganizedTreeListNode constructor.
+/// </remarks>
+/// <param name="path">The path of this node from the root node.</param>
+public class OrganizedTreeListNode<T>(string path)
     where T : IOrganizable
 {
-    private readonly List<T> _values = new();
+    private readonly List<T> _values = [];
 
     /// <summary>
     /// The values that have been organized into this node
     /// </summary>
-    public ImmutableList<T> Values => _values.ToImmutableList();
+    public ImmutableList<T> Values => [.. _values];
 
     /// <summary>
     /// The path from the root node to this node.
     /// </summary>
-    public string Path { get; init; }
+    public string Path { get; init; } = path;
 
     /// <summary>
     /// A collection of child OrganizedTreeListNodes.
     /// </summary>
-    public IList<OrganizedTreeListNode<T>> ChildNodes { get; } = new List<OrganizedTreeListNode<T>>();
-
-    /// <summary>
-    /// OrganizedTreeListNode constructor.
-    /// </summary>
-    /// <param name="path">The path of this node from the root node.</param>
-    public OrganizedTreeListNode(string path)
-    {
-        Path = path;
-    }
+    public IList<OrganizedTreeListNode<T>> ChildNodes { get; } = [];
 
     /// <summary>
     /// OrganizedTreeListNode constructor. The collection passed in organized in a tree structure

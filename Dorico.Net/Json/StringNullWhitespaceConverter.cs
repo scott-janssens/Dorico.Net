@@ -17,7 +17,8 @@ public class StringNullWhitespaceConverter<T> : JsonConverter<T>
         return string.IsNullOrWhiteSpace(value)
             ? default
             : (T)Enum.Parse(type, value, true);
-        // we need to ignore case on the Parse because the capitalization in StatusResponses differs between RhythmicGridResolution and Duration.
+        // we need to ignore case on the Parse because the capitalization in StatusResponses differs between
+        // RhythmicGridResolution and Duration.
     }
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

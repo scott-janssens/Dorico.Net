@@ -8,4 +8,4 @@ namespace DoricoNet.Responses;
 /// </summary>
 /// <param name="OpenScoreId">The ID of the score to which the changed options belong</param>
 [ResponseMessage("optionschanged")]
-public record OptionsChanged(int OpenScoreId) : DoricoUnpromptedResponseBase;
+public record OptionsChangedResponse(int OpenScoreId) : DoricoUnpromptedResponseBase;

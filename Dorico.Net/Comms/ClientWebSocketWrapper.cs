@@ -8,13 +8,17 @@ using System.Runtime.CompilerServices;
 namespace DoricoNet.Comms;
 
 /// <summary>
-///  Minimal wrapper for ClientWebSocket class to allow for dependency injection.  Only implements the methods that Dorico.Net uses.
+///  Minimal wrapper for ClientWebSocket class to allow for dependency injection.  Only implements the methods that
+///  Dorico.Net uses.
 /// </summary>
+/// <remarks>
+/// ClientWebSocketWrapper constructor.
+/// </remarks>
+/// <param name="logger">A logger object.</param>
 [ExcludeFromCodeCoverage]
-public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposable
+public partial class ClientWebSocketWrapper(ILogger logger) : IClientWebSocketWrapper, IDisposable
 {
     private bool _disposed;
-    private readonly ILogger _logger;
     private ClientWebSocket? _clientWebSocket;
 
     /// <inheritdoc/>
@@ -50,15 +54,6 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     partial void LogReceived(string? data);
 
     #endregion
-
-    /// <summary>
-    /// ClientWebSocketWrapper constructor.
-    /// </summary>
-    /// <param name="logger">A logger object.</param>
-    public ClientWebSocketWrapper(ILogger logger)
-    {
-        _logger = logger;
-    }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -115,7 +110,8 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
         LogClosing(closeStatus, statusDescription);
 
         // forcing CancellationToken.None sending an already canceled token seems to have no effect.
-        await _clientWebSocket!.CloseAsync(closeStatus, statusDescription, CancellationToken.None).ConfigureAwait(false);
+        await _clientWebSocket!.CloseAsync(closeStatus, statusDescription, CancellationToken.None)
+            .ConfigureAwait(false);
 
         LogClosed(closeStatus, statusDescription);
 
@@ -124,13 +120,15 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     }
 
     /// <inheritdoc/>
-    public async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
+    public async Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage,
+        CancellationToken cancellationToken)
     {
         AssertSocketOpen();
 
         try
         {
-            await _clientWebSocket!.SendAsync(buffer, messageType, endOfMessage, cancellationToken).ConfigureAwait(false);
+            await _clientWebSocket!.SendAsync(buffer, messageType, endOfMessage, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -141,7 +139,8 @@ public partial class ClientWebSocketWrapper : IClientWebSocketWrapper, IDisposab
     }
 
     /// <inheritdoc/>
-    public async Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken cancellationToken)
+    public async Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer,
+        CancellationToken cancellationToken)
     {
         AssertSocketOpen();
 

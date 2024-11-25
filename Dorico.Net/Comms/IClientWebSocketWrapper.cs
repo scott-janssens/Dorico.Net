@@ -3,7 +3,8 @@
 namespace DoricoNet.Comms;
 
 /// <summary>
-///  Minimal wrapper for ClientWebSocket class to allow for dependency injection.  Only implements the methods that Dorico.Net uses.
+///  Minimal wrapper for ClientWebSocket class to allow for dependency injection.  Only implements the methods that
+///  Dorico.Net uses.
 /// </summary>
 public interface IClientWebSocketWrapper
 {
@@ -42,9 +43,14 @@ public interface IClientWebSocketWrapper
     /// </summary>
     /// <param name="buffer">A ArraySegment storing the request data.</param>
     /// <param name="messageType">A WebSocketMessageType value.</param>
-    /// <param name="endOfMessage">True if the buffer contains the end of the message, or false if the request is broken up.</param>
+    /// <param name="endOfMessage">True if the buffer contains the end of the message, or false if the request is
+    /// broken up.</param>
     /// <param name="cancellationToken">A CancellationToken object.</param>
-    Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken);
+    Task SendAsync(
+        ArraySegment<byte> buffer,
+        WebSocketMessageType messageType,
+        bool endOfMessage,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks if the WebSocket is in an open state and throws an exception if it is not.

@@ -2,7 +2,7 @@
 using DoricoNet.Responses;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.DataStructures;
+namespace Dorico.Net.Tests.Unit.DataStructures;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -16,16 +16,16 @@ public class OptionsCollectionTests
     [SetUp]
     public void Setup()
     {
-        _option1 = new("Path1.A", "ValueType1", "CurrentValue1", new List<string> { "EnumValue1", "EnumValue2" });
-        _option2 = new("Path1.B", "ValueType2", "CurrentValue2", new List<string> { "EnumValue3", "EnumValue4" });
-        _option3 = new("Path2.A", "ValueType3", "CurrentValue3", new List<string> { "EnumValue3", "EnumValue4" });
+        _option1 = new("Path1.A", "ValueType1", "CurrentValue1", ["EnumValue1", "EnumValue2"]);
+        _option2 = new("Path1.B", "ValueType2", "CurrentValue2", ["EnumValue3", "EnumValue4"]);
+        _option3 = new("Path2.A", "ValueType3", "CurrentValue3", ["EnumValue3", "EnumValue4"]);
 
-        _optionsList = new OptionCollection
-        {
+        _optionsList =
+        [
             _option1,
             _option2,
             _option3
-        };
+        ];
     }
 
     [Test]

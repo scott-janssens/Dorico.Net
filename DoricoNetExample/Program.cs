@@ -175,13 +175,13 @@ if (layoutsResponse != null)
     // Modify a layout option of a specific layout. Multiple options can be set at once on multiple layouts,
     // but we'll just do one of each here.
     await remote.SetLayoutOptionsAsync(
-        new[] { new OptionValue("transpositionType", "kTransposingScore") },
-        new[] { layoutId });
+        [new OptionValue("transpositionType", "kTransposingScore")],
+        [layoutId]);
 
     // There are also enums to help specify which layouts to affect
     await remote.SetLayoutOptionsAsync(
-        new[] { new OptionValue("transpositionType", "kScoreInC") },
-        LayoutIds.kAll);
+        [new OptionValue("transpositionType", "kScoreInC")],
+        LayoutId.kAll);
 }
 
 // Dorico sends unprompted status messages a LOT.  Dorico.Net uses an event aggregator called Lea that can be
@@ -243,10 +243,10 @@ await Task.Delay(2500);
 // When the selection changes, Dorico sends three messages: Status, SelectionChanged, Status.
 
 SemaphoreSlim _ss = new(1, 1);
-lea.Subscribe<SelectionChanged>(SelectionChangedHandler);
+lea.Subscribe<SelectionChangedResponse>(SelectionChangedHandler);
 lea.Subscribe<StatusResponse>(StatusChangedHandler2);
 
-async void SelectionChangedHandler(SelectionChanged evt)
+async void SelectionChangedHandler(SelectionChangedResponse evt)
 {
     await _ss.WaitAsync();
 
@@ -277,7 +277,7 @@ async void StatusChangedHandler2(StatusResponse evt)
 
 
 // This creates the metadata file listing all the commands and options.  The file is not used by Dorico.Net, but used
-// to determine if new items have been exposed by the Remote API. tl/dr: Ignore this method call.
+// to determine if new items have been exposed by the Remote API. tl;dr: Ignore this method call.
 //CreateMetaFile();
 
 
@@ -304,6 +304,8 @@ async Task InsertNoteAsync(Note note)
 
 // This creates the metadata file listing all the commands and options. The file is not used by Dorico.Net, but used
 // to determine if new items have been exposed by the Remote API.
+#pragma warning disable CS8321 // Local function is declared but never used
+#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 void CreateMetaFile()
 {
     const string metaFolder = @"Dorico.Net\Meta";
@@ -322,6 +324,8 @@ void CreateMetaFile()
     },
     new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
 }
+#pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
+#pragma warning restore CS8321 // Local function is declared but never used
 
 class MetaDataObject
 {

@@ -12,7 +12,7 @@ using Moq;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.Integration_Tests;
+namespace Dorico.Net.Tests.Integration;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -27,7 +27,8 @@ public class DoricoRemoteIntegrationTests
     public DoricoRemoteIntegrationTests()
     {
         var services = new ServiceCollection()
-            .AddSingleton(sp => LoggerFactory.Create(builder => builder.AddDebug().SetMinimumLevel(LogLevel.Trace)).CreateLogger("Dorico.Net"))
+            .AddSingleton(sp => LoggerFactory.Create(
+                builder => builder.AddDebug().SetMinimumLevel(LogLevel.Trace)).CreateLogger("Dorico.Net"))
             .AddSingleton<IEventAggregator, EventAggregator>()
             .AddTransient<IClientWebSocketWrapper, ClientWebSocketWrapper>()
             .AddSingleton<IDoricoCommsContext, DoricoCommsContext>()
@@ -128,7 +129,8 @@ public class DoricoRemoteIntegrationTests
             await Task.Delay(100);
         }
 
-        if (!await _remote.ConnectAsync("Dorico.Net Integration Test", new ConnectionArguments() { SessionToken = _sessionToken }))
+        if (!await _remote.ConnectAsync("Dorico.Net Integration Test",
+                new ConnectionArguments() { SessionToken = _sessionToken }))
         {
             Console.WriteLine("Unable to connect to Dorico with session token.");
             return;
@@ -153,6 +155,8 @@ public class DoricoRemoteIntegrationTests
             Assert.That(disconnected, Is.True);
             Assert.That(_remote.IsConnected, Is.False);
         });
+
+        _serviceProvider.Dispose();
     }
 
     [Test, Order(-2)]
@@ -160,7 +164,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetStatusAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetStatusAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(-1)]
@@ -264,7 +269,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetEngravingOptionsAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetEngravingOptionsAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(7)]
@@ -289,7 +295,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetFlowsAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetFlowsAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(10)]
@@ -309,7 +316,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetLayoutOptionsAsync(0, source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetLayoutOptionsAsync(0, source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(12)]
@@ -338,7 +346,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetLayoutsAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetLayoutsAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(14)]
@@ -358,7 +367,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetLibraryCollectionsAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetLibraryCollectionsAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(16)]
@@ -366,14 +376,16 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetLibraryEntitiesAsync("", source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetLibraryEntitiesAsync("", source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(17)]
     public async Task GetLibraryCollectionsAndEntities()
     {
         var collectionsResponse = await _remote.GetLibraryCollectionsAsync().ConfigureAwait(false);
-        var entitiesResponse = await _remote.GetLibraryEntitiesAsync(collectionsResponse!.Collections.First()).ConfigureAwait(false);
+        var entitiesResponse = 
+            await _remote.GetLibraryEntitiesAsync(collectionsResponse!.Collections.First()).ConfigureAwait(false);
         var nopeResponse = await _remote.GetLibraryEntitiesAsync("Nope").ConfigureAwait(false);
 
         Assert.Multiple(() =>
@@ -381,9 +393,9 @@ public class DoricoRemoteIntegrationTests
             Assert.That(collectionsResponse, Is.Not.Null);
             Assert.That(collectionsResponse!.Collections.Any(), Is.True);
             Assert.That(entitiesResponse, Is.Not.Null);
-            Assert.That(entitiesResponse!.Any(), Is.True);
+            Assert.That(entitiesResponse, Is.Not.Empty);
             Assert.That(nopeResponse, Is.Not.Null);
-            Assert.That(nopeResponse!.Any(), Is.False);
+            Assert.That(nopeResponse, Is.Empty);
         });
     }
 
@@ -392,7 +404,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetNotationOptionsAsync(0, source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetNotationOptionsAsync(0, source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(19)]
@@ -414,7 +427,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetPlaybackTechniquesAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetPlaybackTechniquesAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(21)]
@@ -429,7 +443,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.SetLayoutOptionsAsync(new List<OptionValue>(), null, source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.SetLayoutOptionsAsync([], null, source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(25)]
@@ -439,7 +454,7 @@ public class DoricoRemoteIntegrationTests
         {
             new("barNumberLayoutOptions.barNumberFrequency", "kEveryBar")
         };
-        var response = await _remote.SetLayoutOptionsAsync(values, new[] { 1, 2, 3 }).ConfigureAwait(false);
+        var response = await _remote.SetLayoutOptionsAsync(values, [1, 2, 3]).ConfigureAwait(false);
         var optionInfo = (await _remote.GetLayoutOptionsAsync(0))?["barNumberLayoutOptions.barNumberFrequency"];
 
         Assert.Multiple(() =>
@@ -454,7 +469,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.SetLayoutOptionsAsync(new List<OptionValue>(), LayoutIds.kAllFullScoreLayouts, source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.SetLayoutOptionsAsync([], LayoutId.kAllFullScoreLayouts, source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(26)]
@@ -464,7 +480,7 @@ public class DoricoRemoteIntegrationTests
         {
             new("barNumberLayoutOptions.barNumberFrequency", "kNone")
         };
-        var response = await _remote.SetLayoutOptionsAsync(values, LayoutIds.kAllFullScoreLayouts).ConfigureAwait(false);
+        var response = await _remote.SetLayoutOptionsAsync(values, LayoutId.kAllFullScoreLayouts).ConfigureAwait(false);
 
         await Task.Delay(100);
 
@@ -482,7 +498,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.SetNotationOptionsAsync(new List<OptionValue>(), null, source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.SetNotationOptionsAsync([], null, source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(28)]
@@ -492,7 +509,7 @@ public class DoricoRemoteIntegrationTests
         {
             new("barlineOptions.defaultBarlineType", "kDouble")
         };
-        var response = await _remote.SetNotationOptionsAsync(values, new[] { 0 }).ConfigureAwait(false);
+        var response = await _remote.SetNotationOptionsAsync(values, [0]).ConfigureAwait(false);
         var optionInfo = (await _remote.GetNotationOptionsAsync(0))?["barlineOptions.defaultBarlineType"];
 
         Assert.Multiple(() =>
@@ -507,7 +524,7 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.SetNotationOptionsAsync(new List<OptionValue>(), FlowIds.kAll, source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () => await _remote.SetNotationOptionsAsync([], FlowId.kAll, source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(29)]
@@ -517,7 +534,7 @@ public class DoricoRemoteIntegrationTests
         {
             new("barlineOptions.finalBarlineType", "kThick")
         };
-        var response = await _remote.SetNotationOptionsAsync(values, FlowIds.kAll).ConfigureAwait(false);
+        var response = await _remote.SetNotationOptionsAsync(values, FlowId.kAll).ConfigureAwait(false);
         var optionInfo = (await _remote.GetNotationOptionsAsync(0))?["barlineOptions.finalBarlineType"];
 
         Assert.Multiple(() =>
@@ -532,7 +549,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.SetEngravingOptionsAsync(new List<OptionValue>(), source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.SetEngravingOptionsAsync([], source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(31)]
@@ -565,13 +583,15 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.GetPropertiesAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.GetPropertiesAsync(source.Token).ConfigureAwait(false));
     }
 
     [Test, Order(50)]
     public async Task GetProperties()
     {
-        var cmdResponse = (Response?)await _remote.SendRequestAsync(new Command("Window.SwitchMode?WindowMode=kWriteMode"));
+        var cmdResponse = 
+            (Response?)await _remote.SendRequestAsync(new Command("Window.SwitchMode?WindowMode=kWriteMode"));
         Assert.That(cmdResponse!.Code, Is.EqualTo("kOK"));
 
         await InsertNoteAsync(new Note("F#", 4));
@@ -585,7 +605,8 @@ public class DoricoRemoteIntegrationTests
     {
         var source = new CancellationTokenSource();
         source.Cancel();
-        Assert.ThrowsAsync<DoricoException>(async () => await _remote.DisconnectAsync(source.Token).ConfigureAwait(false));
+        Assert.ThrowsAsync<DoricoException>(async () =>
+            await _remote.DisconnectAsync(source.Token).ConfigureAwait(false));
     }
 
     private async Task InsertNoteAsync(Note note)

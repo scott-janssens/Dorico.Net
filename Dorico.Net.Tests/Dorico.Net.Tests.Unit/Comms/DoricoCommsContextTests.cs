@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
 using System.Text;
 
-namespace Dorico.Net.Tests.Comms;
+namespace Dorico.Net.Tests.Unit.Comms;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -54,7 +54,8 @@ public class DoricoCommsContextTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == "Connection opened")),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString() == "Connection opened")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -72,7 +73,8 @@ public class DoricoCommsContextTests
             .ReturnsAsync(() =>
             {
                 Task.Delay(100).Wait();
-                return new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed");
+                return new WebSocketReceiveResult(0, WebSocketMessageType.Close, true,
+                    WebSocketCloseStatus.NormalClosure, "Closed");
             });
 
         _context.Start();
@@ -83,7 +85,8 @@ public class DoricoCommsContextTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.Contains("Connection closed: status description"))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString()!.Contains("Connection closed: status description"))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -101,7 +104,8 @@ public class DoricoCommsContextTests
         _mockWebSocket.Setup(ws => ws.AssertSocketOpen()).Throws<InvalidOperationException>();
         var request = new Mock<IDoricoRequest>();
 
-        Assert.ThrowsAsync<InvalidOperationException>(() => _context.SendAsync(request.Object, It.IsAny<CancellationToken>()));
+        Assert.ThrowsAsync<InvalidOperationException>(() => _context.SendAsync(request.Object,
+            It.IsAny<CancellationToken>()));
     }
 
     [Test]
@@ -165,7 +169,8 @@ public class DoricoCommsContextTests
             .ReturnsAsync(new WebSocketReceiveResult(2, WebSocketMessageType.Text, true));
         _mockWebSocket.InSequence(sequence)
             .Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed"));
+            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true,
+                WebSocketCloseStatus.NormalClosure, "Closed"));
 
         _context.Start();
 
@@ -177,7 +182,8 @@ public class DoricoCommsContextTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Error),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.StartsWith("unknown response received"))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString()!.StartsWith("unknown response received"))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -234,7 +240,8 @@ public class DoricoCommsContextTests
             .ReturnsAsync(() =>
             {
                 Task.Delay(100).Wait();
-                return new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed");
+                return new WebSocketReceiveResult(0, WebSocketMessageType.Close, true,
+                    WebSocketCloseStatus.NormalClosure, "Closed");
             });
 
         _context.Start();
@@ -256,7 +263,8 @@ public class DoricoCommsContextTests
             .ReturnsAsync(new WebSocketReceiveResult(selectionChangedResponse.Length, WebSocketMessageType.Text, true));
         _mockWebSocket.InSequence(sequence)
             .Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed"));
+            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true,
+                WebSocketCloseStatus.NormalClosure, "Closed"));
 
         _context.Start();
 
@@ -316,7 +324,8 @@ public class DoricoCommsContextTests
             .ReturnsAsync(new WebSocketReceiveResult(statusResponse.Length, WebSocketMessageType.Text, true));
         _mockWebSocket.InSequence(sequence)
             .Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed"));
+            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true,
+                WebSocketCloseStatus.NormalClosure, "Closed"));
 
         _context.Start();
 
@@ -338,7 +347,8 @@ public class DoricoCommsContextTests
                 var i = 0;
                 Encoding.UTF8.GetBytes(_versionResponse.RawJson!).ToList().ForEach(c => a[i++] = c);
             })
-            .ReturnsAsync(new WebSocketReceiveResult(_versionResponse.RawJson!.Length, WebSocketMessageType.Text, true));
+            .ReturnsAsync(new WebSocketReceiveResult(_versionResponse.RawJson!.Length,
+                WebSocketMessageType.Text, true));
 
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(10);
@@ -358,7 +368,8 @@ public class DoricoCommsContextTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.Contains("canceled"))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString()!.Contains("canceled"))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -373,7 +384,8 @@ public class DoricoCommsContextTests
                 var i = 0;
                 Encoding.UTF8.GetBytes(_versionResponse.RawJson!).ToList().ForEach(c => a[i++] = c);
             })
-            .ReturnsAsync(new WebSocketReceiveResult(_versionResponse.RawJson!.Length, WebSocketMessageType.Text, true));
+            .ReturnsAsync(new WebSocketReceiveResult(_versionResponse.RawJson!.Length,
+                WebSocketMessageType.Text, true));
 
         var result = await _context.SendAsync(_appInfoRequest, CancellationToken.None, 10);
         _context.Start();
@@ -390,7 +402,8 @@ public class DoricoCommsContextTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.Contains("timed out"))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString()!.Contains("timed out"))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -398,7 +411,11 @@ public class DoricoCommsContextTests
     [Test]
     public async Task SendAsyncErrorResponse()
     {
-        var response = new Response("kError", "kNotAllowed") { Message = "response", RawJson = "{\"message\":\"response\",\"code\":\"kError\",\"detail\":\"kNotAllowed\"}" };
+        var response = new Response("kError", "kNotAllowed")
+        {
+            Message = "response",
+            RawJson = "{\"message\":\"response\",\"code\":\"kError\",\"detail\":\"kNotAllowed\"}"
+        };
         _mockWebSocket.Setup(ws => ws.State).Returns(WebSocketState.Open);
         _mockWebSocket.Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
             .Callback((ArraySegment<byte> a, CancellationToken c) =>
@@ -436,7 +453,8 @@ public class DoricoCommsContextTests
     [Test]
     public async Task SendAsyncSocketThrows()
     {
-        _mockWebSocket.Setup(x => x.SendAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<WebSocketMessageType>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        _mockWebSocket.Setup(x => x.SendAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<WebSocketMessageType>(),
+            It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException());
 
         var response = await _context.SendAsync(_appInfoRequest, It.IsAny<CancellationToken>()).ConfigureAwait(false);
@@ -459,13 +477,15 @@ public class DoricoCommsContextTests
                 var i = 0;
                 Encoding.UTF8.GetBytes(_versionResponse.RawJson!).ToList().ForEach(c => a[i++] = c);
             })
-            .ReturnsAsync(new WebSocketReceiveResult(_versionResponse.RawJson!.Length, WebSocketMessageType.Text, true));
+            .ReturnsAsync(new WebSocketReceiveResult(_versionResponse.RawJson!.Length,
+                WebSocketMessageType.Text, true));
         _mockWebSocket.InSequence(sequence)
             .Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Text, true));
         _mockWebSocket.InSequence(sequence)
             .Setup(x => x.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "Closed"));
+            .ReturnsAsync(new WebSocketReceiveResult(0, WebSocketMessageType.Close, true,
+                WebSocketCloseStatus.NormalClosure, "Closed"));
 
         setupCallback?.Invoke(_context);
 
