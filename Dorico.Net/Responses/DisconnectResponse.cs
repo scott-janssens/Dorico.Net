@@ -8,7 +8,8 @@ namespace DoricoNet.Responses;
 /// </summary>
 /// <param name="CloseStatus">A WebSocketCloseStatus value.</param>
 /// <param name="CloseStatusDescription">A description of why the connection was closed or null.</param>
-public record DisconnectResponse(WebSocketCloseStatus? CloseStatus, string? CloseStatusDescription) : DoricoResponseBase
+public record DisconnectResponse(WebSocketCloseStatus? CloseStatus, string? CloseStatusDescription)
+    : DoricoResponseBase
 {
     [SetsRequiredMembers]
     public DisconnectResponse(WebSocketReceiveResult socketResult)

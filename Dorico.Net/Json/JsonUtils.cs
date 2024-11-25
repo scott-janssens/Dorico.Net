@@ -34,14 +34,16 @@ public static class JsonUtils
                     ? JsonNamingPolicy.CamelCase.ConvertName(property.Name)
                     : property.Name;
 
-                if (!root2.TryGetProperty(propertyName, out JsonElement newValue) || newValue.ValueKind == JsonValueKind.Null)
+                if (!root2.TryGetProperty(propertyName, out JsonElement newValue) ||
+                    newValue.ValueKind == JsonValueKind.Null)
                 {
                     property.WriteTo(jsonWriter);
                 }
             }
 
-            // Write all the properties of the second document (including those that are duplicates which were skipped earlier)
-            // The property values of the second document completely override the values of the first, unless they are null in the second.
+            // Write all the properties of the second document (including those that are duplicates which were skipped
+            // earlier) The property values of the second document completely override the values of the first, unless
+            // they are null in the second.
             foreach (JsonProperty property in root2.EnumerateObject())
             {
                 // Don't write null values, unless they are unique to the second document

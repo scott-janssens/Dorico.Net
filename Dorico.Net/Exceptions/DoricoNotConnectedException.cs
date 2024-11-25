@@ -3,7 +3,8 @@
 /// <summary>
 /// Thrown when an operation expects no connection to Dorico, but there one is open.
 /// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "Not needed")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1032:Implement standard exception constructors",
+    Justification = "Not needed")]
 public class DoricoNotConnectedException : Exception
 {
     /// <summary>

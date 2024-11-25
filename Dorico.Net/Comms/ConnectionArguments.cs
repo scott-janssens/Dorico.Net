@@ -21,7 +21,7 @@ public interface IConnectionArguments
     string HandshakeVersion { get; init; }
 
     /// <summary>
-    /// Session token if previously connected to Dorcio, otherwise null.
+    /// Session token if previously connected to Dorico, otherwise null.
     /// </summary>
     string? SessionToken { get; init; }
 }

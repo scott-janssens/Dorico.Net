@@ -181,7 +181,7 @@ if (layoutsResponse != null)
     // There are also enums to help specify which layouts to affect
     await remote.SetLayoutOptionsAsync(
         [new OptionValue("transpositionType", "kScoreInC")],
-        LayoutIds.kAll);
+        LayoutId.kAll);
 }
 
 // Dorico sends unprompted status messages a LOT.  Dorico.Net uses an event aggregator called Lea that can be
@@ -277,7 +277,7 @@ async void StatusChangedHandler2(StatusResponse evt)
 
 
 // This creates the metadata file listing all the commands and options.  The file is not used by Dorico.Net, but used
-// to determine if new items have been exposed by the Remote API. tl/dr: Ignore this method call.
+// to determine if new items have been exposed by the Remote API. tl;dr: Ignore this method call.
 //CreateMetaFile();
 
 
@@ -304,6 +304,8 @@ async Task InsertNoteAsync(Note note)
 
 // This creates the metadata file listing all the commands and options. The file is not used by Dorico.Net, but used
 // to determine if new items have been exposed by the Remote API.
+#pragma warning disable CS8321 // Local function is declared but never used
+#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 void CreateMetaFile()
 {
     const string metaFolder = @"Dorico.Net\Meta";
@@ -312,7 +314,6 @@ void CreateMetaFile()
     var metaFile = Path.Combine(metaDir, metaFolder, "MetaData.json");
     using var commadnsStream = new FileStream(metaFile, FileMode.Create);
     using var streamWriter = new StreamWriter(commadnsStream);
-#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
     streamWriter.Write(JsonSerializer.Serialize(new MetaDataObject
     {
         Version = versionResponse?.ToString(),
@@ -322,8 +323,9 @@ void CreateMetaFile()
         LayoutOptions = layoutOptions
     },
     new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
-#pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 }
+#pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
+#pragma warning restore CS8321 // Local function is declared but never used
 
 class MetaDataObject
 {

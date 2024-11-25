@@ -20,24 +20,32 @@ namespace DoricoNet.Comms;
 /// <summary>
 /// Abstraction for communicating with Dorico.
 /// 
-/// Dorico communicates via a WebSocket, when Dorico.Net sends a request, Dorico sends a response. These messages are in JSON format.
+/// Dorico communicates via a WebSocket, when Dorico.Net sends a request, Dorico sends a response. These messages are
+/// in JSON format.
 /// 
-/// Dorico's responses return in the same order as it received the requests. If multiple requests are sent in quick succession, the 
-/// responses will be in the same order.  When calling SendAsync(), the method waits for its response before returning.
+/// Dorico's responses return in the same order as it received the requests. If multiple requests are sent in quick
+/// succession, the responses will be in the same order.  When calling SendAsync(), the method waits for its response
+/// before returning.
 /// 
-/// Dorico also sends some messages without being tromped by a request.  StatusResponse and SelectionChanged are good examples. When
-/// this happens, The responses are published via an event aggregator (Lea). 
+/// Dorico also sends some messages without being tromped by a request.  StatusResponse and SelectionChanged are good
+/// examples. When this happens, The responses are published via an event aggregator (Lea). 
 /// </summary>
-public partial class DoricoCommsContext : IDoricoCommsContext
+/// <remarks>
+/// Constructor
+/// </remarks>
+/// <param name="doricoWebSocket">Dorico specific WebSocket object</param>
+/// <param name="eventAggregator">Event aggregator instance</param>
+public partial class DoricoCommsContext(
+    IClientWebSocketWrapper socket,
+    IEventAggregator eventAggregator,
+    ILogger logger) : IDoricoCommsContext
 {
     private static readonly object statusLock = new();
-    private readonly IEventAggregator _eventAggregator;
     private readonly ConcurrentQueue<RequestInfo> _responseQueue = new();
-    private readonly Dictionary<string, Type> _responseTypeMap;
-    private readonly ILogger _logger;
-    private readonly IClientWebSocketWrapper _webSocket;
-    private readonly JsonSerializerOptions _jsonSerializationOptions = new() { PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
-    private string _lastStatusContent;
+    private readonly Dictionary<string, Type> _responseTypeMap = BuildResponseTypeMap();
+    private readonly JsonSerializerOptions _jsonSerializationOptions =
+        new() { PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
+    private string _lastStatusContent = JsonSerializer.Serialize(StatusResponse.Create());
 
     #region LoggerMessages
 
@@ -65,7 +73,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     #endregion
 
     /// <inheritdoc/>
-    public WebSocketState State => _webSocket.State;
+    public WebSocketState State => socket.State;
 
     /// <inheritdoc/>
     public Collection<string> HideMessageTypes { get; } = [];
@@ -96,21 +104,6 @@ public partial class DoricoCommsContext : IDoricoCommsContext
         }
     }
 
-    /// <summary>
-    /// Constructor
-    /// </summary>
-    /// <param name="doricoWebSocket">Dorico specific WebSocket object</param>
-    /// <param name="eventAggregator">Event aggregator instance</param>
-    public DoricoCommsContext(IClientWebSocketWrapper socket, IEventAggregator eventAggregator, ILogger logger)
-    {
-        _webSocket = socket;
-        _eventAggregator = eventAggregator;
-        _logger = logger;
-        _responseTypeMap = BuildResponseTypeMap();
-
-        _lastStatusContent = JsonSerializer.Serialize(StatusResponse.Create());
-    }
-
     /// <inheritdoc/>
     public async Task ConnectAsync(IConnectionArguments connectionArgs)
     {
@@ -123,7 +116,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
         _responseQueue.Clear();
 
-        await _webSocket.ConnectAsync(new Uri(connectionArgs.Address),
+        await socket.ConnectAsync(new Uri(connectionArgs.Address),
             connectionArgs.CancellationToken ?? CancellationToken.None).ConfigureAwait(false);
         LogConnectionOpened();
 
@@ -175,7 +168,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
             }
 
             // Close response has no body so can't be processed by HandleWebsocketResponse.
-            await _eventAggregator.PublishAsync(new DisconnectResponse(response)).ConfigureAwait(false);
+            await eventAggregator.PublishAsync(new DisconnectResponse(response)).ConfigureAwait(false);
 
             result = true;
         }
@@ -186,7 +179,7 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     /// <inheritdoc/>
     public async Task StopAsync(CancellationToken cancellationToken, int timeout = -1)
     {
-        _webSocket.AssertSocketOpen();
+        socket.AssertSocketOpen();
 
         var request = new DisconnectRequest();
         await SendAsync(request, cancellationToken, timeout).ConfigureAwait(false);
@@ -198,10 +191,13 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     }
 
     /// <inheritdoc/>
-    public async Task<IDoricoResponse?> SendAsync(IDoricoRequest request, CancellationToken cancellationToken, int timeout = 30000)
+    public async Task<IDoricoResponse?> SendAsync(
+        IDoricoRequest request,
+        CancellationToken cancellationToken,
+        int timeout = 30000)
     {
         Guard.IsNotNull(request, nameof(request));
-        _webSocket.AssertSocketOpen();
+        socket.AssertSocketOpen();
 
         var sendBytes = Encoding.UTF8.GetBytes(request.Message);
         var sendBuffer = new ArraySegment<byte>(sendBytes);
@@ -213,7 +209,8 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 #pragma warning disable CA1031 // Do not catch general exception types
         try
         {
-            await _webSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
+            await socket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancellationToken)
+                .ConfigureAwait(false);
 
             if (Echo && !HideMessageTypes.Contains(request.MessageId))
             {
@@ -290,18 +287,19 @@ public partial class DoricoCommsContext : IDoricoCommsContext
                 CurrentStatus = status;
             }
 
-            _eventAggregator.Publish(evt);
+            eventAggregator.Publish(evt);
         }
     }
 
-    private async Task<(WebSocketReceiveResult Response, string Content)> GetNextResponse(ArraySegment<byte> responseBuffer)
+    private async Task<(WebSocketReceiveResult Response, string Content)> GetNextResponse(
+        ArraySegment<byte> responseBuffer)
     {
         WebSocketReceiveResult response;
         StringBuilder sb = new();
 
         do
         {
-            response = await _webSocket.ReceiveAsync(responseBuffer, CancellationToken.None).ConfigureAwait(false);
+            response = await socket.ReceiveAsync(responseBuffer, CancellationToken.None).ConfigureAwait(false);
 
             if (response.Count == 0)
             {
@@ -331,13 +329,15 @@ public partial class DoricoCommsContext : IDoricoCommsContext
 
         if (content.Contains("\"message\": \"status\"", StringComparison.Ordinal))
         {
-            if (!_responseQueue.TryPeek(out var requestInfo) || requestInfo!.Request.ResponseType != typeof(StatusResponse))
+            if (!_responseQueue.TryPeek(out var requestInfo) || 
+                requestInfo!.Request.ResponseType != typeof(StatusResponse))
             {
                 // non requested status response are likely to be partial payloads.
                 // Apply these as a patch to the current status.
 
                 _lastStatusContent = JsonUtils.Merge(_lastStatusContent, content, true);
-                responseObj = JsonSerializer.Deserialize<StatusResponse>(_lastStatusContent, _jsonSerializationOptions);
+                responseObj = JsonSerializer.Deserialize<StatusResponse>(_lastStatusContent,
+                    _jsonSerializationOptions);
             }
             else
             {
@@ -366,11 +366,13 @@ public partial class DoricoCommsContext : IDoricoCommsContext
     private static Dictionary<string, Type> BuildResponseTypeMap()
     {
         var map = new Dictionary<string, Type>();
-        var responseTypes = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(DoricoResponseBase).IsAssignableFrom(x));
+        var responseTypes = Assembly.GetExecutingAssembly().GetTypes()
+            .Where(x => typeof(DoricoResponseBase).IsAssignableFrom(x));
 
         foreach (var type in responseTypes)
         {
-            string messageId = ((ResponseMessageAttribute)type.GetCustomAttributes(typeof(ResponseMessageAttribute), true).Single()).MessageId;
+            string messageId = ((ResponseMessageAttribute)type
+                .GetCustomAttributes(typeof(ResponseMessageAttribute), true).Single()).MessageId;
 
             if (messageId != null)
             {

@@ -4,8 +4,10 @@ using System.Text.Json.Serialization;
 namespace DoricoNet.Enums;
 
 [JsonConverter(typeof(RhythmicGridResolutionConverter))]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1069:Enums values should not be duplicated", Justification = "Deliberate duplication")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1027:Mark enums with FlagsAttribute", Justification = "Not flags")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1069:Enums values should not be duplicated",
+    Justification = "Deliberate duplication")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1027:Mark enums with FlagsAttribute",
+    Justification = "Not flags")]
 public enum RhythmicGridResolution
 {
     Undefined = 0,

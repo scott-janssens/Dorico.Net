@@ -10,7 +10,7 @@ public record SetLayoutOptionsRequest : SetOptionsRequest
     /// <summary>
     /// A LayoutIDs enum value on which to set the option values.
     /// </summary>
-    public LayoutIds? LayoutIds { get; }
+    public LayoutId? LayoutIds { get; }
 
     /// <summary>
     /// SetLayoutOptionsRequest constructor
@@ -27,7 +27,7 @@ public record SetLayoutOptionsRequest : SetOptionsRequest
     /// </summary>
     /// <param name="optionValues">The list of options and values to set.</param>
     /// <param name="layoutIds">A LayoutIDs enum value on which to set the option values.</param>
-    public SetLayoutOptionsRequest(IEnumerable<OptionValue> optionValues, LayoutIds layoutIds)
+    public SetLayoutOptionsRequest(IEnumerable<OptionValue> optionValues, LayoutId layoutIds)
         : base(OptionsType.kLayout, optionValues)
     {
         LayoutIds = layoutIds;

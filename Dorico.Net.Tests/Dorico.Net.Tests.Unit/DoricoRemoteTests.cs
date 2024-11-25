@@ -9,7 +9,7 @@ using Moq;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
 
-namespace Dorico.Net.Tests;
+namespace Dorico.Net.Tests.Unit;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -57,8 +57,11 @@ public class DoricoRemoteTests
             .Returns(WebSocketState.Open)
             .Returns(WebSocketState.Open);
 
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is ConnectWithSessionRequest), It.IsAny<CancellationToken>(), It.IsAny<int>())).Callback((IDoricoRequest request, CancellationToken token, int timeout) =>
-                ((ConnectWithSessionRequest)request).SetResponse(new Response("kConnected", "detail") { Message = "response" }));
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is ConnectWithSessionRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
+            .Callback((IDoricoRequest request, CancellationToken token, int timeout) =>
+                ((ConnectWithSessionRequest)request)
+            .SetResponse(new Response("kConnected", "detail") { Message = "response" }));
 
         var result = await _remote.ConnectAsync("Test", connectionArguments);
 
@@ -71,7 +74,8 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString() == "Connected to Dorico.")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -87,21 +91,25 @@ public class DoricoRemoteTests
             .Returns(WebSocketState.None)
             .Returns(WebSocketState.None);
 
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is ConnectWithSessionRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is ConnectWithSessionRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
             .Callback((IDoricoRequest request, CancellationToken token, int timeout) =>
-                ((ConnectWithSessionRequest)request).SetResponse(new Response("nope", "detail") { Message = "response" }));
+                ((ConnectWithSessionRequest)request)
+                    .SetResponse(new Response("nope", "detail") { Message = "response" }));
 
         Assert.ThrowsAsync<DoricoException>(() => _remote.ConnectAsync("Test", connectionArguments));
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Error),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == "Could not connect to Dorico. Make sure Dorico is running.")),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString() == "Could not connect to Dorico. Make sure Dorico is running.")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString() == "Connected to Dorico.")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
     }
@@ -123,7 +131,8 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString() == "Connected to Dorico.")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
     }
@@ -140,9 +149,11 @@ public class DoricoRemoteTests
             .Returns(WebSocketState.Open)
             .Returns(WebSocketState.Open);
 
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is ConnectRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is ConnectRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
             .Callback((IDoricoRequest request, CancellationToken token, int timeout) =>
-                ((ConnectRequest)request).SetResponse(new SessionTokenResponse("testToken") { Message = "sessiontoken" }));
+                ((ConnectRequest)request)
+            .SetResponse(new SessionTokenResponse("testToken") { Message = "sessiontoken" }));
 
         var result = await _remote.ConnectAsync("Test", connectionArguments);
 
@@ -155,7 +166,8 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString() == ("Connected to Dorico."))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString() == "Connected to Dorico.")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
@@ -181,9 +193,12 @@ public class DoricoRemoteTests
            .Returns(WebSocketState.Open)
            .Returns(WebSocketState.Closed)
            .Returns(WebSocketState.Closed);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is DisconnectRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is DisconnectRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
             .Callback((IDoricoRequest request, CancellationToken token, int timeout) =>
-                ((DisconnectRequest)request).SetResponse(new DisconnectResponse(new WebSocketReceiveResult(1, WebSocketMessageType.Close, true, WebSocketCloseStatus.NormalClosure, "closed."))));
+                ((DisconnectRequest)request)
+            .SetResponse(new DisconnectResponse(new WebSocketReceiveResult(1, WebSocketMessageType.Close, true,
+                WebSocketCloseStatus.NormalClosure, "closed."))));
 
         var result = await _remote.DisconnectAsync();
 
@@ -196,13 +211,15 @@ public class DoricoRemoteTests
         _mockLogger.Verify(logger => logger.Log(
             It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.Contains("Disconnected from Dorico"))),
+            It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString()!.Contains("Disconnected from Dorico"))),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
         _mockLogger.Verify(logger => logger.Log(
            It.Is<LogLevel>(logLevel => logLevel == LogLevel.Information),
            It.IsAny<EventId>(),
-           It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object).Any(x => x.Value!.ToString()!.Contains("Connected to Dorico."))),
+           It.Is<It.IsAnyType>((@object, @type) => ((IReadOnlyList<KeyValuePair<string, object?>>)@object)
+                .Any(x => x.Value!.ToString()!.Contains("Connected to Dorico."))),
            It.IsAny<Exception>(),
            It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
     }
@@ -218,8 +235,8 @@ public class DoricoRemoteTests
     public void GetCommandNullResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetCommandsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
-            .ReturnsAsync((IDoricoResponse?)null);
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetCommandsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>())).ReturnsAsync((IDoricoResponse?)null);
 
         Assert.ThrowsAsync<InvalidOperationException>(async () => await _remote.GetCommandAsync("None"));
     }
@@ -228,7 +245,8 @@ public class DoricoRemoteTests
     public void GetCommandErrorResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetCommandsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetCommandsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
             .ReturnsAsync(new Response("kError", "Nope") { Message = "response" });
 
         Assert.ThrowsAsync<DoricoException<Response>>(async () => await _remote.GetCommandAsync("None"));
@@ -238,8 +256,8 @@ public class DoricoRemoteTests
     public async Task GetEngravingOptionsNullResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
-            .ReturnsAsync((IDoricoResponse?)null);
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>())).ReturnsAsync((IDoricoResponse?)null);
 
         var result = await _remote.GetEngravingOptionsAsync();
 
@@ -250,7 +268,8 @@ public class DoricoRemoteTests
     public void GetEngravingOptionsErrorResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
             .ReturnsAsync(new Response("kError", "Nope") { Message = "response" });
 
         Assert.ThrowsAsync<DoricoException<Response>>(async () => await _remote.GetEngravingOptionsAsync());
@@ -260,8 +279,8 @@ public class DoricoRemoteTests
     public async Task GetLayoutOptionsNullResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
-            .ReturnsAsync((IDoricoResponse?)null);
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>())).ReturnsAsync((IDoricoResponse?)null);
 
         var result = await _remote.GetLayoutOptionsAsync(0);
 
@@ -272,7 +291,8 @@ public class DoricoRemoteTests
     public void GetLayoutOptionsErrorResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>())) 
             .ReturnsAsync(new Response("kError", "Nope") { Message = "response" });
 
         Assert.ThrowsAsync<DoricoException<Response>>(async () => await _remote.GetLayoutOptionsAsync(0));
@@ -282,8 +302,8 @@ public class DoricoRemoteTests
     public async Task GetNotationOptionsNullResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
-            .ReturnsAsync((IDoricoResponse?)null);
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>())).ReturnsAsync((IDoricoResponse?)null);
 
         var result = await _remote.GetNotationOptionsAsync(0);
 
@@ -294,7 +314,8 @@ public class DoricoRemoteTests
     public void GetNotationOptionsErrorResponse()
     {
         _mockComms.Setup(x => x.State).Returns(WebSocketState.Open);
-        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest), It.IsAny<CancellationToken>(), It.IsAny<int>()))
+        _mockComms.Setup(x => x.SendAsync(It.Is<IDoricoRequest>(x => x is GetOptionsRequest),
+            It.IsAny<CancellationToken>(), It.IsAny<int>()))
             .ReturnsAsync(new Response("kError", "Nope") { Message = "response" });
 
         Assert.ThrowsAsync<DoricoException<Response>>(async () => await _remote.GetNotationOptionsAsync(0));

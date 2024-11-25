@@ -38,7 +38,7 @@ public record Command : DoricoRequestBase<Response>
 
         _commandInfo = commandInfo;
         Name = commandInfo.Name;
-        Parameters = ImmutableList.Create<CommandParameter>();
+        Parameters = [];
 
         if (parameters != null)
         {
@@ -57,7 +57,7 @@ public record Command : DoricoRequestBase<Response>
     public Command(string name, params CommandParameter[] parameters)
     {
         Name = name;
-        Parameters = ImmutableList.Create<CommandParameter>();
+        Parameters = [];
 
         if (parameters != null)
         {

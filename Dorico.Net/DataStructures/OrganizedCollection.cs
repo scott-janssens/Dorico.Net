@@ -10,7 +10,7 @@ namespace DoricoNet.DataStructures;
 public abstract class OrganizedCollection<T> : ICollection<T>
     where T : IOrganizable
 {
-    private readonly Dictionary<string, T> _items = new();
+    private readonly Dictionary<string, T> _items = [];
     private OrganizedTreeListNode<T>? _organizedTreeRoot;
 
     /// <summary>

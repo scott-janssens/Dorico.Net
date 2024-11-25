@@ -10,8 +10,8 @@ namespace DoricoNet.DataStructures;
 /// </summary>
 public class LibraryEntityCollection : ICollection<LibraryEntity>
 {
-    private readonly Dictionary<string, LibraryEntity> _byId = new();
-    private readonly Dictionary<string, List<LibraryEntity>> _byName = new();
+    private readonly Dictionary<string, LibraryEntity> _byId = [];
+    private readonly Dictionary<string, List<LibraryEntity>> _byName = [];
 
     /// <inheritdoc/>
     public int Count => _byId.Count;
@@ -42,7 +42,7 @@ public class LibraryEntityCollection : ICollection<LibraryEntity>
 
         if (!_byName.TryGetValue(item.Name, out var list))
         {
-            list = new();
+            list = [];
             _byName.Add(item.Name, list);
         }
 

@@ -50,7 +50,10 @@ namespace DoricoNet.Comms
         /// <param name="cancellationToken">Cancellation token</param>
         /// <param name="timeout">timeout in milliseconds, defaults to -1 (infinity).</param>
         /// <returns>The response to the request.</returns>
-        Task<IDoricoResponse?> SendAsync(IDoricoRequest request, CancellationToken cancellationToken, int timeout = -1);
+        Task<IDoricoResponse?> SendAsync(
+            IDoricoRequest request,
+            CancellationToken cancellationToken,
+            int timeout = -1);
 
         /// <summary>
         /// Starts receiving messages from Dorico.
@@ -61,8 +64,10 @@ namespace DoricoNet.Comms
         /// Stops receiving messages from Dorico.
         /// </summary>
         /// <returns></returns>
-        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Name is not confusing")]
-        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Parameter order is consistent")]
+        [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords",
+            Justification = "Name is not confusing")]
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last",
+            Justification = "Parameter order is consistent")]
         Task StopAsync(CancellationToken cancellationToken, int timeout = -1);
     }
 }

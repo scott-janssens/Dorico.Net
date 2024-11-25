@@ -1,12 +1,7 @@
 ﻿namespace DoricoNet.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]
-internal sealed class ResponseMessageAttribute : Attribute
+internal sealed class ResponseMessageAttribute(string messageId) : Attribute
 {
-    public string MessageId { get; }
-
-    public ResponseMessageAttribute(string messageId)
-    {
-        MessageId = messageId;
-    }
+    public string MessageId { get; } = messageId;
 }

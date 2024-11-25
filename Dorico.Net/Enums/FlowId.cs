@@ -3,10 +3,7 @@
 namespace DoricoNet.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum LayoutIds
+public enum FlowId
 {
     kAll = 0,
-    kAllFullScoreLayouts,
-    kAllPartLayouts,
-    kAllCustomScoreLayouts
 }

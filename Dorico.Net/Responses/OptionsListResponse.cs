@@ -11,4 +11,5 @@ namespace DoricoNet.Responses;
 /// <param name="OptionsType">The type of options being listed.</param>
 /// <param name="Options">The list of options, their types and current values</param>
 [ResponseMessage("optionslist")]
-public record OptionsListResponse(int OpenScoreID, OptionsType OptionsType, OptionCollection Options) : DoricoResponseBase;
+public record OptionsListResponse(int OpenScoreID, OptionsType OptionsType, OptionCollection Options)
+    : DoricoResponseBase;

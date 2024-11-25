@@ -10,7 +10,7 @@ public record SetNotationOptionsRequest : SetOptionsRequest
     /// <summary>
     /// A FlowIds enum value on which to set the option values.
     /// </summary>
-    public FlowIds? FlowIds { get; }
+    public FlowId? FlowIds { get; }
 
     /// <summary>
     /// SetNotationOptionsRequest constructor.
@@ -27,7 +27,7 @@ public record SetNotationOptionsRequest : SetOptionsRequest
     /// </summary>
     /// <param name="optionValues">The list of options and values to set.</param>
     /// <param name="flowIds">A FlowId enum value on which to set the option values.</param>
-    public SetNotationOptionsRequest(IEnumerable<OptionValue> optionValues, FlowIds flowIds)
+    public SetNotationOptionsRequest(IEnumerable<OptionValue> optionValues, FlowId flowIds)
         : base(OptionsType.kNotation, optionValues)
     {
         FlowIds = flowIds;

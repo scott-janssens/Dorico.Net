@@ -13,7 +13,8 @@ public abstract record SetOptionsRequest : DoricoRequestBase<Response>
     protected IEnumerable<int>? Ids { get; }
 
     /// <inheritdoc/>
-    public override string Message => $"{{\"message\": \"setoptions\", \"optionsType\": \"{OptionsType}\"{GetIdString()}, \"optionvalues\": [{string.Join(',', _optionValueMessages)}]}}";
+    public override string Message =>
+        $"{{\"message\": \"setoptions\", \"optionsType\": \"{OptionsType}\"{GetIdString()}, \"optionvalues\": [{string.Join(',', _optionValueMessages)}]}}";
 
     /// <inheritdoc/>
     public override string MessageId => "setoptions";

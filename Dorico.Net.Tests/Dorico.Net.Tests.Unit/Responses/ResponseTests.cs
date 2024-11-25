@@ -2,7 +2,7 @@
 using DoricoNet.Responses;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.Responses;
+namespace Dorico.Net.Tests.Unit.Responses;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -34,7 +34,7 @@ public class ResponseTests
     [Test]
     public void ExpressionMapEntryToString()
     {
-        var response = new ExpressionMapEntry("TestName", new[] { "" });
+        var response = new ExpressionMapEntry("TestName", [""]);
         Assert.That(response.ToString(), Is.EqualTo("TestName"));
     }
 

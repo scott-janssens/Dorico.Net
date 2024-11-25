@@ -10,4 +10,8 @@ namespace DoricoNet.Responses;
 /// <param name="EventTypes">Current event types</param>
 /// <param name="Properties">The list of properties</param>
 [ResponseMessage("propertieslist")]
-public record PropertiesListResponse(int OpenScoreID, string CurrentScope, IEnumerable<string>? EventTypes, IEnumerable<Property> Properties) : DoricoResponseBase;
+public record PropertiesListResponse(
+    int OpenScoreID,
+    string CurrentScope,
+    IEnumerable<string>? EventTypes,
+    IEnumerable<Property> Properties) : DoricoResponseBase;

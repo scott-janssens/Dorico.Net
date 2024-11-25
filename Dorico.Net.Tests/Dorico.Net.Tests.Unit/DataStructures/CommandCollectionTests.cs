@@ -2,7 +2,7 @@
 using DoricoNet.Responses;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.DataStructures;
+namespace Dorico.Net.Tests.Unit.DataStructures;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]
@@ -13,12 +13,12 @@ public class CommandCollectionTests
     [SetUp]
     public void Setup()
     {
-        _commandList = new CommandCollection
-            {
-                new CommandInfo("Path1.Command1", "Display1", new List<string> { "Param1" }, new List<string> { "OptParam1" }),
-                new CommandInfo("Path1.Command2", "Display2", new List<string> { "Param2" }, new List<string> { "OptParam2" }),
-                new CommandInfo("Path2.Command1", "Display1", new List<string> { "Param3" }, new List<string> { "OptParam3" })
-            };
+        _commandList =
+        [
+            new CommandInfo("Path1.Command1", "Display1", ["Param1"], ["OptParam1"]),
+            new CommandInfo("Path1.Command2", "Display2", ["Param2"], ["OptParam2"]),
+            new CommandInfo("Path2.Command1", "Display1", ["Param3"], ["OptParam3"])
+        ];
     }
 
     [Test]

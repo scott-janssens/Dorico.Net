@@ -1,7 +1,7 @@
 ﻿using DoricoNet.Commands;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Dorico.Net.Tests.Commands;
+namespace Dorico.Net.Tests.Unit.Commands;
 
 [ExcludeFromCodeCoverage]
 [TestFixture]

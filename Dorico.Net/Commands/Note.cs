@@ -8,8 +8,8 @@ namespace DoricoNet.Commands;
 /// </summary>
 public record Note
 {
-    private static readonly string[] _pitchesSharp = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-    private static readonly string[] _pitchesFlat = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+    private static readonly string[] _pitchesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    private static readonly string[] _pitchesFlat = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
     private readonly bool _internalUseSharps;
 
@@ -102,7 +102,8 @@ public record Note
     /// </summary>
     /// <param name="pitch">A note pitch</param>
     /// <param name="octave">An octave value</param>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "lower case is deliberate and necessary here")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase",
+        Justification = "lower case is deliberate and necessary here")]
     public Note(string pitch, int octave)
     {
         Guard.IsNotNullOrWhiteSpace(pitch);
@@ -118,7 +119,9 @@ public record Note
         _internalUseSharps = (accidental.Length == 0 || accidental[0] != 'b') && UseSharps;
         AccidentalType = GetAccidentalType(accidental);
 
-        Midi = octave * 12 + 12 + (_internalUseSharps ? Array.FindIndex(_pitchesSharp, PitchMatch) : Array.FindIndex(_pitchesFlat, PitchMatch));
+        Midi = octave * 12 + 12 + (_internalUseSharps
+            ? Array.FindIndex(_pitchesSharp, PitchMatch)
+            : Array.FindIndex(_pitchesFlat, PitchMatch));
 
         CalculateMidiRelatedValues();
     }
@@ -127,7 +130,8 @@ public record Note
     /// A helper method that returns the command(s) necessary to set a note value in Dorico.
     /// </summary>
     /// <returns>A collection of Command object.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "Not a concern with octave values")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1305:Specify IFormatProvider",
+        Justification = "Not a concern with octave values")]
     public IList<Command> GetNoteCommands()
     {
         var result = new List<Command>();
@@ -137,7 +141,9 @@ public record Note
             result.Add(new("NoteInput.SetAccidental", new CommandParameter("Type", AccidentalType.ToString()!)));
         }
 
-        result.Add(new("NoteInput.Pitch", new CommandParameter("Pitch", Pitch.ToString()), new CommandParameter("OctaveValue", Octave.ToString())));
+        result.Add(new("NoteInput.Pitch",
+                   new CommandParameter("Pitch", Pitch.ToString()),
+                   new CommandParameter("OctaveValue", Octave.ToString())));
 
         return result;
     }
@@ -207,30 +213,19 @@ public record Note
 
     #region Private Methods
 
-    private static Accidental? GetAccidentalType(string accidental)
-    {
-        switch (accidental)
+    private static Accidental? GetAccidentalType(string accidental) =>
+        accidental switch
         {
-            case "":
-                return Enums.Accidental.None;
-            case "0":
-                return Enums.Accidental.kNatural;
-            case "#":
-                return Enums.Accidental.kSharp;
-            case "x":
-                return Enums.Accidental.kDoubleSharp;
-            case "#x":
-                return Enums.Accidental.kTripleSharp;
-            case "b":
-                return Enums.Accidental.kFlat;
-            case "bb":
-                return Enums.Accidental.kDoubleFlat;
-            case "bbb":
-                return Enums.Accidental.kTripleFlat;
-            default:
-                throw new ArgumentException("Invalid value for accidental", nameof(accidental));
-        }
-    }
+            "" => (Accidental?)Enums.Accidental.None,
+            "0" => (Accidental?)Enums.Accidental.kNatural,
+            "#" => (Accidental?)Enums.Accidental.kSharp,
+            "x" => (Accidental?)Enums.Accidental.kDoubleSharp,
+            "#x" => (Accidental?)Enums.Accidental.kTripleSharp,
+            "b" => (Accidental?)Enums.Accidental.kFlat,
+            "bb" => (Accidental?)Enums.Accidental.kDoubleFlat,
+            "bbb" => (Accidental?)Enums.Accidental.kTripleFlat,
+            _ => throw new ArgumentException("Invalid value for accidental", nameof(accidental)),
+        };
 
     private void CalculateMidiRelatedValues()
     {

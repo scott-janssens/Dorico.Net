@@ -181,20 +181,36 @@ public record StatusResponse : DoricoUnpromptedResponseBase
     public bool? RestMode { get; init; }
 
     public bool ShowHiddenNoteheadsInGrey { get; init; }
-	public bool HighlightMIDITriggerRegions { get; init; }
-	public bool ShowPageNumbersOverlay { get; init; }
-	public bool ShowCautionaryAccidentals { get; init; }
-	public bool ShowAccidentalsWithForcedVisibility { get; init; }
-	public bool ActivatedForPlayback { get; init; }
-	public bool ArticulationAccent { get; init; }
-	public bool ArticulationStaccato { get; init; }
-	public bool ArticulationMarcato { get; init; }
-	public bool ArticulationTenuto { get; init; }
-	public bool ArticulationStaccatissimo { get; init; }
-	public bool ArticulationStaccatoTenuto { get; init; }
-	public bool ArticulationStressed { get; init; }
-	public bool ArticulationUnstressed { get; init; }
-	public Accidental Accidental { get; init; }
-	public bool GraceNoteSlashed { get; init; }
-	public bool GraceNoteUnslashed {  get; init;  }
+	
+    public bool HighlightMIDITriggerRegions { get; init; }
+	
+    public bool ShowPageNumbersOverlay { get; init; }
+	
+    public bool ShowCautionaryAccidentals { get; init; }
+	
+    public bool ShowAccidentalsWithForcedVisibility { get; init; }
+	
+    public bool ActivatedForPlayback { get; init; }
+	
+    public bool ArticulationAccent { get; init; }
+	
+    public bool ArticulationStaccato { get; init; }
+	
+    public bool ArticulationMarcato { get; init; }
+	
+    public bool ArticulationTenuto { get; init; }
+	
+    public bool ArticulationStaccatissimo { get; init; }
+	
+    public bool ArticulationStaccatoTenuto { get; init; }
+	
+    public bool ArticulationStressed { get; init; }
+	
+    public bool ArticulationUnstressed { get; init; }
+	
+    public Accidental Accidental { get; init; }
+	
+    public bool GraceNoteSlashed { get; init; }
+	
+    public bool GraceNoteUnslashed {  get; init;  }
 }
