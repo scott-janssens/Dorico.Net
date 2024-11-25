@@ -476,7 +476,8 @@ public partial class DoricoRemote(IDoricoCommsContext commsContext, ILogger logg
 
         if (response != null && response is Response errorResponse && errorResponse.Code == "kError")
         {
-            throw new DoricoException<Response>(errorResponse, errorResponse.Detail!);
+            throw new DoricoException<Response>(errorResponse,
+                $"Response code: kError, Detail: {errorResponse.Detail ?? "null"}");
         }
     }
 }

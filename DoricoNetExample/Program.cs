@@ -3,6 +3,7 @@ using DoricoNet.Commands;
 using DoricoNet.Comms;
 using DoricoNet.DataStructures;
 using DoricoNet.Enums;
+using DoricoNet.Exceptions;
 using DoricoNet.Requests;
 using DoricoNet.Responses;
 using Lea;
@@ -95,10 +96,23 @@ Console.WriteLine();
 var fileOpenResponse = await remote.SendRequestAsync(new Command("File.Open", new CommandParameter("File", "<path>")));
 
 // or with a command object from the commands list:
-//var fileOpenCommand = new Command(commandInfo);
-//fileOpenCommand.AddParameter(new("File", "<path>"));
-//fileOpenResponse = await remote.SendRequestAsync(fileOpenCommand);
+var switchCommandInfo = commands["Window.SwitchMode"];
+var switchSetupCommand = new Command(switchCommandInfo, new CommandParameter("WindowMode", "kSetupMode"));
+var switchResponse = await remote.SendRequestAsync(switchSetupCommand);
 
+// NOTE!: There is currently no way to automatically distinguish which commands or requests will work with the
+// connected Dorico edition.  We can tell if Dorico is Pro, Elements, or SE by the AppInfoResponse, but the get
+// commands request doesn't tell us which parameters are invalid for non-Pro editions.  This can be seen by launching
+// Dorico with CTRL held down to open as SE, or ALT/Option key to open as Elements.
+switchSetupCommand = new Command("Window.SwitchMode", new CommandParameter("WindowMode", "kEngraveMode"));
+switchResponse = await remote.SendRequestAsync(switchSetupCommand);
+
+// If we're connected to Dorico SE or Elements, the previous request has no effect as those editions do not have 
+// Engrave mode.  However, this doesn't not result in an error response.
+
+// Make sure we return to Write mode.
+switchSetupCommand = new Command("Window.SwitchMode", new CommandParameter("WindowMode", "kWriteMode"));
+switchResponse = await remote.SendRequestAsync(switchSetupCommand);
 
 // Currently there is no documentation from the Dorico team about what the parameters mean or what the valid values
 // may be.  The best way to see the commands work is to perform the desired operation in Dorico and look at the
@@ -152,15 +166,34 @@ if (layoutsResponse != null)
 // The OptionsCollection is an OrganizedCollection like the CommandCollection.
 
 // Engraving options are global
-var engravingOptions = await remote.GetEngravingOptionsAsync();
-Console.WriteLine($"\nEngraving Options: {engravingOptions?.Count}");
+OptionCollection? engravingOptions = null;
+
+try
+{
+    engravingOptions = await remote.GetEngravingOptionsAsync();
+    Console.WriteLine($"\nEngraving Options: {engravingOptions?.Count}");
+}
+catch (DoricoException<Response> ex)
+{
+    // If we're connected to Dorico SE or Elements, Dorico responds with an error.  In this case "kUnknownOptionsType"
+    // because Engraving options aren't available in those editions.  There is currently no way to automatically tell
+    // which requests or commands are supported by the connected Dorico edition.
+    Console.WriteLine(ex.Message);
+}
 
 // Notation options are per flow:
 OptionCollection? notationOptions = null;
 if (flowsResponse != null)
 {
-    notationOptions = await remote.GetNotationOptionsAsync(flowsResponse.Flows.First().FlowID);
-    Console.WriteLine($"Notation Options: {notationOptions?.Count}");
+    try
+    {
+        notationOptions = await remote.GetNotationOptionsAsync(flowsResponse.Flows.First().FlowID);
+        Console.WriteLine($"Notation Options: {notationOptions?.Count}");
+    }
+    catch (DoricoException<Response> ex)
+    {
+        Console.WriteLine(ex.Message);
+    }
 }
 
 // Layout options are per layout
@@ -308,21 +341,24 @@ async Task InsertNoteAsync(Note note)
 #pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 void CreateMetaFile()
 {
-    const string metaFolder = @"Dorico.Net\Meta";
-    var metaDir = Environment.CurrentDirectory.Split(@"\DoricoNetExample")[0];
-    
-    var metaFile = Path.Combine(metaDir, metaFolder, "MetaData.json");
-    using var commadnsStream = new FileStream(metaFile, FileMode.Create);
-    using var streamWriter = new StreamWriter(commadnsStream);
-    streamWriter.Write(JsonSerializer.Serialize(new MetaDataObject
+    if (engravingOptions != null) // Must be Pro edition if not null
     {
-        Version = versionResponse?.ToString(),
-        Commands = commands,
-        EngravingOptions = engravingOptions,
-        NotationOptions = notationOptions,
-        LayoutOptions = layoutOptions
-    },
-    new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
+        const string metaFolder = @"Dorico.Net\Meta";
+        var metaDir = Environment.CurrentDirectory.Split(@"\DoricoNetExample")[0];
+
+        var metaFile = Path.Combine(metaDir, metaFolder, "MetaData.json");
+        using var commadnsStream = new FileStream(metaFile, FileMode.Create);
+        using var streamWriter = new StreamWriter(commadnsStream);
+        streamWriter.Write(JsonSerializer.Serialize(new MetaDataObject
+        {
+            Version = versionResponse?.ToString(),
+            Commands = commands,
+            EngravingOptions = engravingOptions,
+            NotationOptions = notationOptions,
+            LayoutOptions = layoutOptions
+        },
+        new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
+    }
 }
 #pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 #pragma warning restore CS8321 // Local function is declared but never used
