@@ -1,7 +1,7 @@
 # Dorico.Net
 A library for working with Dorico's Remote Control API
 
-Version 0.2.0-beta
+Version 0.3.0-beta
 
 # Description
 
@@ -17,7 +17,7 @@ The Dorico API is not well documented. Examining the application.log is the best
 
 # Notes
 
-This code has been tested with Dorico Pro 5 on Windows 11.
+This code has been tested with Dorico Pro 5.1.70 on Windows 11.
 
 The Note class does not currently support microtonality.
 

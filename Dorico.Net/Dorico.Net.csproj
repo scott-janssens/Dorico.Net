@@ -10,7 +10,7 @@
     <Authors>Scott Janssens</Authors>
     <Company />
     <Description>A library for working with Dorico's remote control API</Description>
-    <Copyright>Copyright 2023 Scott Janssens</Copyright>
+    <Copyright>Copyright 2024 Scott Janssens</Copyright>
     <PackageProjectUrl>https://github.com/scott-janssens/Dorico.Net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/scott-janssens/Dorico.Net</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -21,10 +21,22 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <AnalysisLevel>latest-all</AnalysisLevel>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <AssemblyVersion>0.3.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <Version>0.2.0-beta</Version>
-    <PackageReleaseNotes>Improved disconnection process.
+    <Version>0.3.0-beta</Version>
+    <PackageReleaseNotes>Many breaking changes
+
+Solution updated to use .NET 8
+Various NuGet references updated
+
+StatusResponse.ZoomPercent changed from string? to int?
+Multiple new properties added to StatusResponse
+
+DoricoRemote.CurrentStatus added
+
+Partial status responses from Dorico are now merged into CurrentStatus
+
+All response classes now contain Response in their name.
 
 ---
 The Dorico trademark is registered in the US, Europe and other countries by Steinberg Media Technologies GmbH and is used with permission</PackageReleaseNotes>
