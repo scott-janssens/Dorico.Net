@@ -176,7 +176,7 @@ public record StatusResponse : DoricoUnpromptedResponseBase
     public int? RhythmDots { get; init; }
 
     /// <summary>
-    /// UNDOCUMENTED: Seems to be set when a rest is currently selected.
+    /// UNDOCUMENTED: True when rest mode is enabled in the Notes panel in the left zone.
     /// </summary>
     public bool? RestMode { get; init; }
 

@@ -243,8 +243,9 @@ resetEvent.WaitOne();
 // Making changes within Dorico is currently limited to essentially what you can do via the menu in Dorico.
 // Via Status, limited information can be inferred about what is selected.
 
-// If a note or rest is selected, the StatusResponse.Duration will be set.  If StatusResponse.RestMode is true, a
-// rest is selected. There is currently no way to differentiate between any other item types that might be selected.
+// If a note or rest is selected, the StatusResponse.Duration will be set.  If there is an accidental on the selected
+// note, it will be reflected in StatusResponse.Accidental.  There is no way currently to differentiate between a
+// selected note or rest.  The rest mode in Dorico doesn't change with selection changes.
 
 // There is currently no way to query for information about a bar, stave, or project in general. 
 
@@ -309,11 +310,6 @@ async void StatusChangedHandler2(StatusResponse evt)
 // properties that pertain to the selection changing, rather than the entire Status message.
 
 
-// This creates the metadata file listing all the commands and options.  The file is not used by Dorico.Net, but used
-// to determine if new items have been exposed by the Remote API. tl;dr: Ignore this method call.
-//CreateMetaFile();
-
-
 Console.Write("\n\nPress any key to exit.");
 Console.ReadKey(true);
 Console.WriteLine();
@@ -333,49 +329,4 @@ async Task InsertNoteAsync(Note note)
     {
         await remote.SendRequestAsync(command);
     }
-}
-
-// This creates the metadata file listing all the commands and options. The file is not used by Dorico.Net, but used
-// to determine if new items have been exposed by the Remote API.
-#pragma warning disable CS8321 // Local function is declared but never used
-#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
-void CreateMetaFile()
-{
-    if (engravingOptions != null) // Must be Pro edition if not null
-    {
-        const string metaFolder = @"Dorico.Net\Meta";
-        var metaDir = Environment.CurrentDirectory.Split(@"\DoricoNetExample")[0];
-
-        var metaFile = Path.Combine(metaDir, metaFolder, "MetaData.json");
-        using var commadnsStream = new FileStream(metaFile, FileMode.Create);
-        using var streamWriter = new StreamWriter(commadnsStream);
-        streamWriter.Write(JsonSerializer.Serialize(new MetaDataObject
-        {
-            Version = versionResponse?.ToString(),
-            Commands = commands,
-            EngravingOptions = engravingOptions,
-            NotationOptions = notationOptions,
-            LayoutOptions = layoutOptions
-        },
-        new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
-    }
-}
-#pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
-#pragma warning restore CS8321 // Local function is declared but never used
-
-class MetaDataObject
-{
-    public string? Version { get; init; }
-
-    public int CommandsCount => Commands?.Count ?? 0;
-    public CommandCollection? Commands { get; init; }
-
-    public int EngravingOptionsCount => EngravingOptions?.Count ?? 0;
-    public OptionCollection? EngravingOptions { get; init; }
-
-    public int NotationOptionsCount => NotationOptions?.Count ?? 0;
-    public OptionCollection? NotationOptions { get; init; }
-    
-    public int LayoutOptionsCount => LayoutOptions?.Count ?? 0;
-    public OptionCollection? LayoutOptions { get; init; }
 }
