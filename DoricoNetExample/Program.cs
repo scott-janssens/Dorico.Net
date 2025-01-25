@@ -9,7 +9,6 @@ using DoricoNet.Responses;
 using Lea;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 // Setup dependency injection
 var services = new ServiceCollection()
@@ -96,6 +95,8 @@ Console.WriteLine();
 var fileOpenResponse = await remote.SendRequestAsync(new Command("File.Open", new CommandParameter("File", "<path>")));
 
 // or with a command object from the commands list:
+// IMPORTANT: At this point in the demo, a project must be loaded in Dorico. Either set a proper path in the Open
+// command above, or manually create a new project in Dorico. Close any error dialogs in Dorico before continuing.
 var switchCommandInfo = commands["Window.SwitchMode"];
 var switchSetupCommand = new Command(switchCommandInfo, new CommandParameter("WindowMode", "kSetupMode"));
 var switchResponse = await remote.SendRequestAsync(switchSetupCommand);
@@ -128,10 +129,6 @@ switchResponse = await remote.SendRequestAsync(switchSetupCommand);
 
 // NOTE: Some commands, such as those to create projects appear to be disabled through the Remote Control API at
 // the moment.
-
-
-// IMPORTANT: At this point in the demo, a project must be loaded in Dorico. Either set a proper path in the Open
-// command above, or manually create a new project in Dorico. Close any error dialogs in Dorico before continuing.
 
 
 // Make sure we're not in Note Input mode as the rest of the demo assumes it's off at this point.

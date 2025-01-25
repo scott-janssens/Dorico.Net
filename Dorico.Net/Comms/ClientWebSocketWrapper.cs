@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace DoricoNet.Comms;
 
@@ -47,8 +48,8 @@ public partial class ClientWebSocketWrapper(ILogger logger) : IClientWebSocketWr
     [LoggerMessage(LogLevel.Trace, "Error sending data to WebSocket: {Message}")]
     partial void LogSendError(string message);
 
-    [LoggerMessage(LogLevel.Trace, "Sent data to WebSocket, Type: {MessageType}, EoM: {EndOfMessage}")]
-    partial void LogSent(WebSocketMessageType messageType, bool endOfMessage);
+    [LoggerMessage(LogLevel.Trace, "Sent data to WebSocket, Type: {MessageType}, EoM: {EndOfMessage}\n{data}")]
+    partial void LogSent(WebSocketMessageType messageType, bool endOfMessage, string data);
 
     [LoggerMessage(LogLevel.Trace, "Received data from WebSocket: {Data}")]
     partial void LogReceived(string? data);
@@ -135,7 +136,7 @@ public partial class ClientWebSocketWrapper(ILogger logger) : IClientWebSocketWr
             LogSendError(ex.Message);
             throw;
         }
-        LogSent(messageType, endOfMessage);
+        LogSent(messageType, endOfMessage, System.Text.Encoding.UTF8.GetString(buffer));
     }
 
     /// <inheritdoc/>
@@ -145,7 +146,7 @@ public partial class ClientWebSocketWrapper(ILogger logger) : IClientWebSocketWr
         AssertSocketOpen();
 
         var response = await _clientWebSocket!.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-        LogReceived(buffer.ToString());
+        LogReceived(System.Text.Encoding.UTF8.GetString(buffer));
 
         if (response.MessageType == WebSocketMessageType.Close)
         {
