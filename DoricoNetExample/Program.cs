@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 // Setup dependency injection
 var services = new ServiceCollection()
     .AddSingleton(sp => LoggerFactory.Create(builder => 
+        // Additional info is sent to the logger at Debug and Trace levels
         builder.AddFilter("DoricoRemote", LogLevel.Information).AddConsole()).CreateLogger("DoricoRemote"))
     .AddSingleton<IEventAggregator, EventAggregator>()
     .AddTransient<IClientWebSocketWrapper, ClientWebSocketWrapper>()
