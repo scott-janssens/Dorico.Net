@@ -146,7 +146,7 @@ public partial class ClientWebSocketWrapper(ILogger logger) : IClientWebSocketWr
         AssertSocketOpen();
 
         var response = await _clientWebSocket!.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-        LogReceived(System.Text.Encoding.UTF8.GetString(buffer));
+        LogReceived(Encoding.UTF8.GetString(buffer.Array, buffer.Offset, response.Count));
 
         if (response.MessageType == WebSocketMessageType.Close)
         {
