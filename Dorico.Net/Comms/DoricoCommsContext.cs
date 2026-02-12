@@ -218,7 +218,6 @@ public partial class DoricoCommsContext(
 
         _responseQueue.Enqueue(requestInfo);
 
-#pragma warning disable CA1031 // Do not catch general exception types
         try
         {
             await socket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancellationToken)
@@ -261,7 +260,6 @@ public partial class DoricoCommsContext(
         {
             resetEvent.Dispose();
         }
-#pragma warning restore CA1031 // Do not catch general exception types
 
         return request.Response ?? request.ErrorResponse;
     }
@@ -368,9 +366,9 @@ public partial class DoricoCommsContext(
         try
         {        
             responseObj ??= (DoricoResponseBase?)JsonSerializer.Deserialize(
-            content,
-            responseType,
-            _jsonSerializationOptions);
+                content,
+                responseType,
+                _jsonSerializationOptions);
 		}
 		catch
 		{

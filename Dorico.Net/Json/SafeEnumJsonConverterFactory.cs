@@ -29,7 +29,7 @@ public sealed class SafeEnumJsonConverterFactory : JsonConverterFactory
 	/// <remarks>
 	/// The first argument is the enum <see cref="Type"/>; the second is the raw string token value (may be <c>null</c>).
 	/// </remarks>
-	public static Action<Type, string?>? UnknownEnumStringToken;
+	public static Action<Type, string?>? UnknownEnumStringToken { get; set; }
 
 	/// <summary>
 	/// Optional callback invoked when an enum value is provided as a number token but is not a defined enum value.
@@ -38,14 +38,14 @@ public sealed class SafeEnumJsonConverterFactory : JsonConverterFactory
 	/// The first argument is the enum <see cref="Type"/>; the second is the raw numeric value if it fits in an <see cref="int"/>,
 	/// otherwise <c>null</c>.
 	/// </remarks>
-	public static Action<Type, int?>? UnknownEnumNumberToken;
+	public static Action<Type, int?>? UnknownEnumNumberToken { get; set; }
 
-	/// <summary>
-	/// Determines whether this factory can create a converter for <paramref name="typeToConvert"/>.
-	/// </summary>
-	/// <param name="typeToConvert">The type to be converted.</param>
-	/// <returns><c>true</c> if the type is an enum or a nullable enum; otherwise <c>false</c>.</returns>
-	public override bool CanConvert(Type typeToConvert)
+    /// <summary>
+    /// Determines whether this factory can create a converter for <paramref name="typeToConvert"/>.
+    /// </summary>
+    /// <param name="typeToConvert">The type to be converted.</param>
+    /// <returns><c>true</c> if the type is an enum or a nullable enum; otherwise <c>false</c>.</returns>
+    public override bool CanConvert(Type typeToConvert)
 	{
 		ArgumentNullException.ThrowIfNull(typeToConvert);
 		return (Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert).IsEnum;
