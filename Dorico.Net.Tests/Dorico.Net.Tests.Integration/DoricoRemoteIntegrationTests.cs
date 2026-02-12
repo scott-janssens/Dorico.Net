@@ -18,7 +18,7 @@ namespace Dorico.Net.Tests.Integration;
 [TestFixture]
 public class DoricoRemoteIntegrationTests
 {
-    private const string DoricoFileName = "Dorico5";
+    private const string DoricoFileName = "Dorico6";
     private const string _clientName = "Dorico.Net Integration Test";
     private readonly ServiceProvider _serviceProvider;
     private string? _sessionToken;
