@@ -43,9 +43,21 @@ public partial class DoricoCommsContext(
     private static readonly object statusLock = new();
     private readonly ConcurrentQueue<RequestInfo> _responseQueue = new();
     private readonly Dictionary<string, Type> _responseTypeMap = BuildResponseTypeMap();
-    private readonly JsonSerializerOptions _jsonSerializationOptions =
-        new() { PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
-    private string _lastStatusContent = JsonSerializer.Serialize(StatusResponse.Create());
+	private readonly JsonSerializerOptions _jsonSerializationOptions = CreateJsonOptions();
+	private static JsonSerializerOptions CreateJsonOptions()
+	{
+		var o = new JsonSerializerOptions
+		{
+			PropertyNameCaseInsensitive = true,
+			NumberHandling = JsonNumberHandling.AllowReadingFromString
+		};
+
+		// This makes ALL enums tolerant (WindowMode, ToolType, NoteInputMode, etc.)
+		o.Converters.Add(new SafeEnumJsonConverterFactory());
+
+		return o;
+	}
+	private string _lastStatusContent = JsonSerializer.Serialize(StatusResponse.Create());
 
     #region LoggerMessages
 
@@ -206,7 +218,6 @@ public partial class DoricoCommsContext(
 
         _responseQueue.Enqueue(requestInfo);
 
-#pragma warning disable CA1031 // Do not catch general exception types
         try
         {
             await socket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancellationToken)
@@ -249,7 +260,6 @@ public partial class DoricoCommsContext(
         {
             resetEvent.Dispose();
         }
-#pragma warning restore CA1031 // Do not catch general exception types
 
         return request.Response ?? request.ErrorResponse;
     }
@@ -336,8 +346,16 @@ public partial class DoricoCommsContext(
                 // Apply these as a patch to the current status.
 
                 _lastStatusContent = JsonUtils.Merge(_lastStatusContent, content, true);
-                responseObj = JsonSerializer.Deserialize<StatusResponse>(_lastStatusContent,
-                    _jsonSerializationOptions);
+                try
+                {               
+                    responseObj = JsonSerializer.Deserialize<StatusResponse>(_lastStatusContent,
+                        _jsonSerializationOptions);
+                }
+                catch 
+                {
+					// Handle deserialization errors
+					LogUnknownResponseError(content);
+				}
             }
             else
             {
@@ -345,12 +363,20 @@ public partial class DoricoCommsContext(
             }
         }
 
-        responseObj ??= (DoricoResponseBase?)JsonSerializer.Deserialize(
-            content,
-            responseType,
-            _jsonSerializationOptions);
+        try
+        {        
+            responseObj ??= (DoricoResponseBase?)JsonSerializer.Deserialize(
+                content,
+                responseType,
+                _jsonSerializationOptions);
+		}
+		catch
+		{
+			// Handle deserialization errors
+			LogUnknownResponseError(content);
+		}
 
-        if (responseObj != null)
+		if (responseObj != null)
         {
             responseObj.RawJson = content;
 
